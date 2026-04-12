@@ -1,0 +1,58 @@
+# --- Python & Environment ---
+__pycache__/
+*.py[cod]
+*$py.class
+.env
+.venv
+env/
+venv/
+bin/
+lib/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.installed.cfg
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+
+# --- Jupyter Notebooks ---
+.ipynb_checkpoints
+*/.ipynb_checkpoints/*
+
+# --- Machine Learning & Data ---
+# Do NOT upload large datasets or models over 100MB
+*.h5
+*.pth
+*.pt
+*.pkl
+*.joblib
+*.npy
+*.npz
+data/
+datasets/
+models/
+temp/
+
+# --- Logs & Performance ---
+logs/
+*.log
+.coverage
+.cache
+nosetests.xml
+coverage.xml
+htmlcov/
+.tox/
+.nox/
+.pytest_cache/
+
+# --- System Files ---
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp

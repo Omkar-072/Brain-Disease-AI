@@ -1,0 +1,440 @@
+{% extends "base.html" %}
+
+{% block title %}Scan Result - Brain Disease AI{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <!-- Back button -->
+        <div class="col-12 mb-4">
+            <a href="/dashboard" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+            </a>
+        </div>
+
+        <!-- Scan Image and Info -->
+        <div class="col-lg-5 mb-4">
+            <div class="card shadow h-100">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-image me-2"></i>Scan Image</h5>
+                </div>
+                <div class="card-body text-center">
+                    <div id="scanImageContainer" class="mb-4">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                    <div class="scan-info text-start">
+                        <div class="row g-3">
+                            <div class="col-6">
+                                <strong>Scan Type:</strong>
+                                <p class="mb-0 text-muted" id="scanType">-</p>
+                            </div>
+                            <div class="col-6">
+                                <strong>Upload Date:</strong>
+                                <p class="mb-0 text-muted" id="uploadDate">-</p>
+                            </div>
+                            <div class="col-6">
+                                <strong>Status:</strong>
+                                <p class="mb-0"><span class="badge" id="scanStatus">-</span></p>
+                            </div>
+                            <div class="col-6">
+                                <strong>Scan ID:</strong>
+                                <p class="mb-0 text-muted" id="scanId">-</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Analysis Results -->
+        <div class="col-lg-7 mb-4">
+            <div class="card shadow h-100">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-brain me-2"></i>AI Analysis Results</h5>
+                </div>
+                <div class="card-body" id="analysisResults">
+                    <div class="text-center py-5">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-3 text-muted">Loading analysis results...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detailed Report Section -->
+    <div class="row" id="reportSection" style="display: none;">
+        <div class="col-12 mb-4">
+            <div class="card shadow">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-file-medical me-2"></i>Detailed Report</h5>
+                </div>
+                <div class="card-body" id="detailedReport">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recommendations Section -->
+    <div class="row" id="recommendationsSection" style="display: none;">
+        <div class="col-md-6 mb-4">
+            <div class="card shadow h-100">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-stethoscope me-2"></i>Recommended Actions</h5>
+                </div>
+                <div class="card-body" id="recommendations">
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 mb-4">
+            <div class="card shadow h-100">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0"><i class="fas fa-hospital me-2"></i>Recommended Specialists</h5>
+                </div>
+                <div class="card-body" id="specialists">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Medical Disclaimer -->
+    <div class="row">
+        <div class="col-12">
+            <div class="alert alert-warning">
+                <h6 class="alert-heading"><i class="fas fa-exclamation-triangle me-2"></i>Important Medical Disclaimer
+                </h6>
+                <p class="mb-0">
+                    This AI analysis is for informational purposes only and should not be considered as a medical
+                    diagnosis.
+                    The results are based on pattern recognition algorithms and may not account for all clinical
+                    factors.
+                    Please consult a qualified healthcare professional for proper diagnosis and treatment options.
+                    Do not make any medical decisions solely based on this analysis.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="d-flex gap-3 justify-content-center">
+                <button class="btn btn-primary" onclick="downloadReport()">
+                    <i class="fas fa-download me-2"></i>Download Report
+                </button>
+                <button class="btn btn-outline-primary" onclick="shareWithDoctor()">
+                    <i class="fas fa-share me-2"></i>Share with Doctor
+                </button>
+                <a href="/chat" class="btn btn-outline-secondary">
+                    <i class="fas fa-comment-medical me-2"></i>Ask AI Assistant
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .scan-image {
+        max-width: 100%;
+        max-height: 400px;
+        border-radius: 10px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .diagnosis-card {
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        border-radius: 15px;
+        padding: 30px;
+        text-align: center;
+    }
+
+    .confidence-bar {
+        height: 25px;
+        border-radius: 12px;
+        overflow: hidden;
+        background: #e9ecef;
+    }
+
+    .confidence-fill {
+        height: 100%;
+        border-radius: 12px;
+        transition: width 1s ease-in-out;
+    }
+
+    .confidence-high {
+        background: linear-gradient(90deg, #28a745, #20c997);
+    }
+
+    .confidence-medium {
+        background: linear-gradient(90deg, #ffc107, #fd7e14);
+    }
+
+    .confidence-low {
+        background: linear-gradient(90deg, #dc3545, #ff6b6b);
+    }
+
+    .disease-icon {
+        font-size: 4rem;
+        margin-bottom: 20px;
+    }
+
+    .healthy {
+        color: #28a745;
+    }
+
+    .warning {
+        color: #ffc107;
+    }
+
+    .danger {
+        color: #dc3545;
+    }
+
+    .timeline-item {
+        border-left: 3px solid #667eea;
+        padding-left: 20px;
+        margin-bottom: 20px;
+        position: relative;
+    }
+
+    .timeline-item::before {
+        content: '';
+        position: absolute;
+        left: -8px;
+        top: 0;
+        width: 13px;
+        height: 13px;
+        border-radius: 50%;
+        background: #667eea;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Check authentication
+    const token = localStorage.getItem('access_token');
+    if (!token) {
+        window.location.href = '/login?redirect=' + window.location.pathname;
+    }
+
+    // Get scan ID from URL
+    const pathParts = window.location.pathname.split('/');
+    const scanId = pathParts[pathParts.length - 1];
+
+    let retryCount = 0;
+    const MAX_RETRIES = 20;
+
+    // Load scan details
+    async function loadScanDetails() {
+        try {
+            const response = await fetch(`/api/v1/scans/${scanId}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (!response.ok) throw new Error('Failed to load scan');
+
+            const scan = await response.json();
+            displayScanDetails(scan);
+
+        } catch (error) {
+            console.error(error);
+            showError("Failed to load scan details.");
+        }
+    }
+
+    function showError(msg) {
+        document.getElementById('analysisResults').innerHTML = `
+        <div class="alert alert-danger">
+            ${msg}
+        </div>
+    `;
+    }
+
+    function displayScanDetails(scan) {
+
+        // IMAGE
+        const imageContainer = document.getElementById('scanImageContainer');
+        imageContainer.innerHTML = scan.file_name ? `
+        <img src="/api/v1/scans/${scan.id}/image" class="scan-image"
+        onerror="this.parentElement.innerHTML='Image not available'">
+    ` : `Image not available`;
+
+        // INFO
+        document.getElementById('scanType').textContent = scan.scan_type || 'MRI';
+        document.getElementById('uploadDate').textContent = new Date(scan.created_at).toLocaleDateString();
+        document.getElementById('scanId').textContent = `#${scan.id}`;
+
+        const status = (scan.status || '').toLowerCase();
+        const statusBadge = document.getElementById('scanStatus');
+        statusBadge.textContent = status.charAt(0).toUpperCase() + status.slice(1);
+        statusBadge.className = 'badge ' + getStatusClass(status);
+
+        // STATUS HANDLING
+        if (status === 'completed' && scan.predicted_disease) {
+            displayAnalysisResults(scan);
+            return; // STOP polling
+        }
+
+        if (status === 'processing' || status === 'pending') {
+            showLoading();
+            pollScan(); // 🔥 IMPORTANT FIX
+            return;
+        }
+
+        if (status === 'failed') {
+            showError("Analysis failed. Try again.");
+        }
+    }
+
+    // 🔁 POLLING LOOP
+    function pollScan() {
+        if (retryCount >= MAX_RETRIES) {
+            showError("Analysis taking too long.");
+            return;
+        }
+
+        retryCount++;
+
+        setTimeout(() => {
+            loadScanDetails();
+        }, 3000);
+    }
+
+    function showLoading() {
+        document.getElementById('analysisResults').innerHTML = `
+        <div class="text-center py-5">
+            <div class="spinner-border text-primary"></div>
+            <p class="mt-3">Analyzing scan...</p>
+        </div>
+    `;
+    }
+
+    // RESULTS
+    function displayAnalysisResults(scan) {
+        // Use predicted_disease (the final decision), NOT alz_result
+        const disease   = (scan.predicted_disease || 'INCONCLUSIVE').toUpperCase();
+        const diagnosis = disease.replace(/_/g, ' ');
+        const confidence = scan.confidence_score || 0;
+        const percent    = Math.round(confidence * 100);
+
+        // Pull per-model data from the structured blob
+        const allPreds   = scan.all_predictions || {};
+        const tumorModel = allPreds.tumor_model  || {};
+        const alzModel   = allPreds.alz_model    || {};
+        const diseaseType = allPreds.disease_type || 'unknown';
+
+        // Colour the diagnosis heading by type
+        const typeColour = {
+            tumor:       '#dc3545',   // red
+            alzheimers:  '#fd7e14',   // orange
+            normal:      '#28a745',   // green
+            unknown:     '#6c757d',   // grey
+        }[diseaseType] || '#6c757d';
+
+        const typeBadge = {
+            tumor:       'Tumor Detected',
+            alzheimers:  'Alzheimer Pattern',
+            normal:      'Healthy Brain',
+            unknown:     'Inconclusive',
+        }[diseaseType] || 'Unknown';
+
+        const typeBadgeClass = {
+            tumor:      'bg-danger',
+            alzheimers: 'bg-warning text-dark',
+            normal:     'bg-success',
+            unknown:    'bg-secondary',
+        }[diseaseType] || 'bg-secondary';
+
+        // Build per-model breakdown rows
+        function modelRow(label, conf) {
+            const pct = Math.round((conf || 0) * 100);
+            const disp = (label || 'N/A').replace(/_/g, ' ');
+            return `
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span class="fw-semibold">${disp}</span>
+                        <span class="text-muted">${pct}%</span>
+                    </div>
+                    <div class="progress" style="height:10px;">
+                        <div class="progress-bar" style="width:${pct}%"></div>
+                    </div>
+                </div>`;
+        }
+
+        document.getElementById('analysisResults').innerHTML = `
+            <div class="text-center mb-3">
+                <span class="badge ${typeBadgeClass} mb-2">${typeBadge}</span>
+                <h3 style="color:${typeColour};font-weight:700;">${diagnosis}</h3>
+                <h5 class="text-muted">${percent}% Confidence</h5>
+            </div>
+            <hr>
+            <h6 class="text-muted mb-3">Individual Model Results</h6>
+            <div class="mb-1"><small class="text-uppercase fw-bold text-secondary">Tumor Model</small></div>
+            ${modelRow(tumorModel.label, tumorModel.confidence)}
+            <div class="mb-1"><small class="text-uppercase fw-bold text-secondary">Alzheimer Model</small></div>
+            ${modelRow(alzModel.label, alzModel.confidence)}
+        `;
+
+        // Show recommendations for any positive result
+        if (diseaseType !== 'normal' && diseaseType !== 'unknown') {
+            showRecommendations(diagnosis, scan);
+        } else if (diseaseType === 'normal') {
+            document.getElementById('detailedReport').innerHTML =
+                '<p class="text-success"><strong>No significant pathology detected.</strong> ' +
+                'Regular check-ups are still recommended.</p>';
+            document.getElementById('reportSection').style.display = 'block';
+        }
+    }
+
+    // RECOMMENDATIONS
+    function showRecommendations(diagnosis, scan) {
+
+        document.getElementById('recommendationsSection').style.display = 'flex';
+        document.getElementById('reportSection').style.display = 'block';
+
+        document.getElementById('recommendations').innerHTML = `
+        <ul>
+            <li>Consult a specialist</li>
+            <li>Get further tests</li>
+        </ul>
+    `;
+
+        document.getElementById('specialists').innerHTML = `
+        <ul>
+            <li>Neurologist</li>
+            <li>Neurosurgeon</li>
+        </ul>
+    `;
+
+        document.getElementById('detailedReport').innerHTML = `
+        Diagnosis: ${diagnosis} <br>
+        Confidence: ${Math.round(scan.confidence_score * 100)}%
+    `;
+    }
+
+    // HELPERS
+    function getStatusClass(status) {
+        return {
+            completed: 'bg-success',
+            processing: 'bg-warning',
+            pending: 'bg-secondary',
+            failed: 'bg-danger'
+        }[status] || 'bg-secondary';
+    }
+
+    // INIT
+    loadScanDetails();
+
+</script>
+
+{% endblock %}

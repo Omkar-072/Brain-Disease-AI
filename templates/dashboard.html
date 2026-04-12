@@ -1,0 +1,237 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Brain Disease AI{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3">
+            <div class="card mb-4">
+                <div class="card-body text-center">
+                    <div class="avatar-circle mx-auto mb-3">
+                        <i class="fas fa-user fa-3x text-primary"></i>
+                    </div>
+                    <h5 id="userName">Loading...</h5>
+                    <p class="text-muted" id="userEmail">Loading...</p>
+                </div>
+            </div>
+            
+            <div class="list-group">
+                <a href="/dashboard" class="list-group-item list-group-item-action active">
+                    <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                </a>
+                <a href="/upload" class="list-group-item list-group-item-action">
+                    <i class="fas fa-upload me-2"></i>Upload Scan
+                </a>
+                <a href="/dashboard/scans" class="list-group-item list-group-item-action">
+                    <i class="fas fa-images me-2"></i>My Scans
+                </a>
+                <a href="/dashboard/profile" class="list-group-item list-group-item-action">
+                    <i class="fas fa-user-cog me-2"></i>Profile Settings
+                </a>
+                <a href="#" onclick="logout()" class="list-group-item list-group-item-action text-danger">
+                    <i class="fas fa-sign-out-alt me-2"></i>Logout
+                </a>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="col-md-9">
+            <h2 class="mb-4"><i class="fas fa-tachometer-alt me-2"></i>Dashboard</h2>
+            
+            <!-- Stats Cards -->
+            <div class="row g-4 mb-4">
+                <div class="col-md-4">
+                    <div class="card bg-primary text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="text-white-50">Total Scans</h6>
+                                    <h2 id="totalScans">0</h2>
+                                </div>
+                                <i class="fas fa-x-ray fa-3x opacity-50"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card bg-success text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="text-white-50">Completed</h6>
+                                    <h2 id="completedScans">0</h2>
+                                </div>
+                                <i class="fas fa-check-circle fa-3x opacity-50"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card bg-warning text-dark">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="text-dark-50">Pending</h6>
+                                    <h2 id="pendingScans">0</h2>
+                                </div>
+                                <i class="fas fa-clock fa-3x opacity-50"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Latest Diagnosis -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-brain me-2"></i>Latest Diagnosis</h5>
+                </div>
+                <div class="card-body" id="latestDiagnosis">
+                    <div class="text-center text-muted py-4">
+                        <i class="fas fa-upload fa-3x mb-3"></i>
+                        <p>No scans yet. <a href="/upload">Upload your first scan</a></p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Recent Scans -->
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-history me-2"></i>Recent Scans</h5>
+                    <a href="/dashboard/scans" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="recentScansTable">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Scan Type</th>
+                                    <th>Status</th>
+                                    <th>Result</th>
+                                    <th>Confidence</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted py-4">
+                                        Loading scans...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .avatar-circle {
+        width: 100px;
+        height: 100px;
+        background: #e3f2fd;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .badge-completed { background-color: #28a745; }
+    .badge-pending { background-color: #ffc107; color: #000; }
+    .badge-processing { background-color: #17a2b8; }
+    .badge-failed { background-color: #dc3545; }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Redirect to login if not logged in (authFetch also handles this, but fail fast)
+if (!localStorage.getItem('access_token')) {
+    window.location.href = '/login?redirect=/dashboard';
+}
+
+async function loadDashboard() {
+    try {
+        const response = await authFetch('/api/v1/users/me/dashboard');
+        if (!response) return;  // authFetch already redirected
+
+        if (!response.ok) {
+            console.error('Dashboard load failed:', response.status, await response.text());
+            return;
+        }
+
+        const data = await response.json();
+
+        // Update user info
+        document.getElementById('userName').textContent = data.user.first_name
+            ? `${data.user.first_name} ${data.user.last_name || ''}`
+            : data.user.username;
+        document.getElementById('userEmail').textContent = data.user.email;
+
+        // Update stats
+        document.getElementById('totalScans').textContent = data.stats.total_scans;
+        document.getElementById('completedScans').textContent = data.stats.completed_scans;
+        document.getElementById('pendingScans').textContent = data.stats.pending_scans;
+
+        // Update latest diagnosis
+        if (data.stats.latest_diagnosis) {
+            const latest = data.stats.latest_diagnosis;
+            document.getElementById('latestDiagnosis').innerHTML = `
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h4>${latest.predicted_disease ? latest.predicted_disease.replace(/_/g, ' ') : 'N/A'}</h4>
+                        <p class="mb-1"><strong>Confidence:</strong> ${latest.confidence_score ? (latest.confidence_score * 100).toFixed(1) + '%' : 'N/A'}</p>
+                        <p class="mb-1"><strong>Scan Type:</strong> ${latest.scan_type}</p>
+                        <p class="mb-0"><strong>Date:</strong> ${latest.processed_at ? new Date(latest.processed_at).toLocaleDateString() : 'N/A'}</p>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <a href="/dashboard/scans/${latest.id}" class="btn btn-primary">View Report</a>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Update recent scans table
+        const tbody = document.querySelector('#recentScansTable tbody');
+        if (data.recent_scans && data.recent_scans.length > 0) {
+            tbody.innerHTML = data.recent_scans.map(scan => `
+                <tr>
+                    <td>${new Date(scan.created_at).toLocaleDateString()}</td>
+                    <td>${scan.scan_type}</td>
+                    <td><span class="badge badge-${scan.status}">${scan.status}</span></td>
+                    <td>${scan.predicted_disease ? scan.predicted_disease.replace(/_/g, ' ') : '-'}</td>
+                    <td>${scan.confidence_score ? (scan.confidence_score * 100).toFixed(1) + '%' : '-'}</td>
+                    <td>
+                        <a href="/dashboard/scans/${scan.id}" class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                    </td>
+                </tr>
+            `).join('');
+        } else {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="6" class="text-center text-muted py-4">
+                        No scans found. <a href="/upload">Upload your first scan</a>
+                    </td>
+                </tr>
+            `;
+        }
+
+    } catch (error) {
+        console.error('Error loading dashboard:', error);
+    }
+}
+
+function logout() { globalLogout(); }
+
+loadDashboard();
+</script>
+{% endblock %}

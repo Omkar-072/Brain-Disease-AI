@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+
+{% block title %}Register - Brain Disease AI{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-lg">
+                <div class="card-header bg-primary text-white text-center py-4">
+                    <h3><i class="fas fa-user-plus me-2"></i>Create Account</h3>
+                    <p class="mb-0">Join Brain Disease AI for early detection</p>
+                </div>
+                <div class="card-body p-4">
+                    <div id="register-error" class="alert alert-danger d-none"></div>
+                    <div id="register-success" class="alert alert-success d-none"></div>
+                    
+                    <form id="registerForm">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="firstName" class="form-label">First Name</label>
+                                <input type="text" class="form-control" id="firstName" name="first_name" 
+                                       placeholder="Enter first name">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="lastName" class="form-label">Last Name</label>
+                                <input type="text" class="form-control" id="lastName" name="last_name" 
+                                       placeholder="Enter last name">
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="username" class="form-label">Username <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-user"></i></span>
+                                <input type="text" class="form-control" id="username" name="username" required
+                                       placeholder="Choose a username" minlength="3" maxlength="100">
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email Address <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+                                <input type="email" class="form-control" id="email" name="email" required 
+                                       placeholder="Enter your email">
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="phone" class="form-label">Phone Number</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-phone"></i></span>
+                                <input type="tel" class="form-control" id="phone" name="phone" 
+                                       placeholder="Enter your phone number">
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Password <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                                <input type="password" class="form-control" id="password" name="password" required 
+                                       placeholder="Create a strong password" minlength="8">
+                            </div>
+                            <small class="text-muted">
+                                Min 8 characters with uppercase, lowercase, and number
+                            </small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="confirmPassword" class="form-label">Confirm Password <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                                <input type="password" class="form-control" id="confirmPassword" name="confirm_password" required 
+                                       placeholder="Confirm your password">
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="termsAgree" required>
+                            <label class="form-check-label" for="termsAgree">
+                                I agree to the <a href="/terms" target="_blank">Terms of Service</a> and 
+                                <a href="/privacy" target="_blank">Privacy Policy</a>
+                            </label>
+                        </div>
+                        
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="disclaimerAgree" required>
+                            <label class="form-check-label" for="disclaimerAgree">
+                                I understand this is for informational purposes only and not a substitute for medical advice
+                            </label>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary w-100 py-2" id="registerBtn">
+                            <i class="fas fa-user-plus me-2"></i>Create Account
+                        </button>
+                    </form>
+                    
+                    <hr>
+                    
+                    <div class="text-center">
+                        <p class="mb-0">Already have an account? <a href="/login" class="fw-bold">Login here</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('registerForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const formData = {
+        email: document.getElementById('email').value,
+        username: document.getElementById('username').value,
+        password: document.getElementById('password').value,
+        confirm_password: document.getElementById('confirmPassword').value,
+        first_name: document.getElementById('firstName').value || null,
+        last_name: document.getElementById('lastName').value || null,
+        phone: document.getElementById('phone').value || null
+    };
+    
+    const registerBtn = document.getElementById('registerBtn');
+    const errorDiv = document.getElementById('register-error');
+    const successDiv = document.getElementById('register-success');
+    
+    // Validate passwords match
+    if (formData.password !== formData.confirm_password) {
+        errorDiv.textContent = 'Passwords do not match';
+        errorDiv.classList.remove('d-none');
+        return;
+    }
+    
+    // Disable button and show loading
+    registerBtn.disabled = true;
+    registerBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Creating Account...';
+    errorDiv.classList.add('d-none');
+    successDiv.classList.add('d-none');
+    
+    try {
+        const response = await fetch('/api/v1/auth/register', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formData)
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            successDiv.textContent = 'Account created successfully! Redirecting to login...';
+            successDiv.classList.remove('d-none');
+            
+            setTimeout(() => {
+                window.location.href = '/login';
+            }, 2000);
+        } else {
+            let errorMsg = 'Registration failed. Please try again.';
+            if (Array.isArray(data.detail)) {
+                errorMsg = data.detail.map(err => {
+                    const field = err.loc ? err.loc[err.loc.length - 1] : '';
+                    return field ? `${field}: ${err.msg}` : err.msg;
+                }).join('\n');
+            } else if (data.detail) {
+                errorMsg = data.detail;
+            }
+            errorDiv.innerText = errorMsg;
+            errorDiv.classList.remove('d-none');
+        }
+    } catch (error) {
+        errorDiv.textContent = 'An error occurred. Please try again.';
+        errorDiv.classList.remove('d-none');
+    } finally {
+        registerBtn.disabled = false;
+        registerBtn.innerHTML = '<i class="fas fa-user-plus me-2"></i>Create Account';
+    }
+});
+</script>
+{% endblock %}
