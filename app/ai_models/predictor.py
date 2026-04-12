@@ -216,7 +216,7 @@ def decide_final(tumor_result: Dict, alz_result: Dict):
     # Threshold 0.50: even moderate confidence in a tumor label beats
     # anything the Alzheimer model can say.
     TUMOR_NEGATIVE = ("NO_TUMOR", "INCONCLUSIVE")
-    if t_label not in TUMOR_NEGATIVE and t_conf > 0.50:
+    if t_label not in TUMOR_NEGATIVE and t_conf > 0.65:
         logger.info("Decision → TUMOR path: %s (%.3f)", t_label, t_conf)
         return t_label, t_conf, "Tumor Scan", "tumor"
 
@@ -224,7 +224,7 @@ def decide_final(tumor_result: Dict, alz_result: Dict):
     # ONLY reached when tumor explicitly said NO_TUMOR.
     # Alzheimer model is structurally gated here; it cannot be reached
     # by any code path that produces a tumor label.
-    if t_label == "NO_TUMOR":
+    if t_label == "NO_TUMOR" and t_conf > 0.60:
         ALZ_NEGATIVE = ("NON_DEMENTED", "INCONCLUSIVE")
 
         if a_label not in ALZ_NEGATIVE and a_conf > 0.60:
@@ -264,7 +264,7 @@ def get_prediction_confidence_level(confidence: float) -> str:
 # MAIN PIPELINE
 # ─────────────────────────────────────────
 
-def predict(image_path: Union[str, Path]) -> Dict[str, Any]:
+def predict(image_path: Union[str, Path], scan_type: str = "MRI") -> Dict[str, Any]:
     """
     Full prediction pipeline.
 
@@ -290,8 +290,26 @@ def predict(image_path: Union[str, Path]) -> Dict[str, Any]:
         image = preprocess_image(image_path)
 
         # 2. Inference (each call is internally safe)
-        tumor_result = run_model(_tumor_model, image, CLASS_MAPPING)
-        alz_result   = run_model(_alz_model,   image, ALZ_LABELS)
+        scan_type = scan_type.upper()
+
+        tumor_result = {"label": "INCONCLUSIVE", "confidence": 0.0}
+        alz_result   = {"label": "INCONCLUSIVE", "confidence": 0.0}
+
+        if scan_type == "MRI":
+            # Run BOTH, but enforce strict priority
+            tumor_result = run_model(_tumor_model, image, CLASS_MAPPING)
+
+            # ONLY run Alzheimer if tumor says NO_TUMOR confidently
+            if tumor_result["label"] == "NO_TUMOR" and tumor_result["confidence"] > 0.60:
+                alz_result = run_model(_alz_model, image, ALZ_LABELS)
+
+        elif scan_type == "CT":
+            # Future: Stroke model
+            tumor_result = {"label": "INCONCLUSIVE", "confidence": 0.0}
+
+        elif scan_type == "PET":
+            # Future: Parkinson model
+            tumor_result = {"label": "INCONCLUSIVE", "confidence": 0.0}
 
         logger.info(f"Tumor raw result : {tumor_result}")
         logger.info(f"Alzheimer raw result: {alz_result}")
@@ -353,8 +371,12 @@ class BrainDiseasePredictor:
             "status":              "loaded" if _models_loaded else "not_loaded",
         }
 
-    def predict_sync(self, image_path: Union[str, Path]) -> Dict[str, Any]:
-        return predict(image_path)
+    def predict_sync(self, image_path: Union[str, Path], scan_type: str = "MRI") -> Dict[str, Any]:
+        return predict(image_path, scan_type)
 
-    async def predict(self, image_path: Union[str, Path]) -> Dict[str, Any]:
-        return predict(image_path)
+    async def predict(self, image_path: Union[str, Path], scan_type: str = "MRI") -> Dict[str, Any]:
+        return predict(image_path, scan_type)
+    
+    async def predict(self, image_path, scan_type="MRI"):
+        print("DEBUG: predict called with", scan_type)
+        return predict(image_path, scan_type)

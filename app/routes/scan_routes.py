@@ -162,7 +162,7 @@ async def process_scan_async(scan_id: int):
 
         # ── Run AI prediction (always returns a valid dict) ───────────────
         predictor = BrainDiseasePredictor()
-        result = await predictor.predict(scan.file_path)
+        result = await predictor.predict(scan.file_path, scan.scan_type)
 
         # ── Validate result structure; fill defaults if anything is missing ─
         raw_prediction = result.get("predicted_disease") or "INCONCLUSIVE"
