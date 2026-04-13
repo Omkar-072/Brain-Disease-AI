@@ -47,6 +47,9 @@ class DiseaseType(str, enum.Enum):
     NON_DEMENTED        = "NON_DEMENTED"
     NORMAL              = "NORMAL"          # healthy brain (both models negative)
     INCONCLUSIVE        = "INCONCLUSIVE"
+    STROKE              = "STROKE"
+    NO_STROKE           = "NO_STROKE"
+    PARKINSON           = "PARKINSON"
 
 
 # ============= USER MODELS =============

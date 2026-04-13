@@ -1,382 +1,204 @@
-"""
-Brain Disease AI - Predictor Module
-Hardened prediction pipeline: fail-safe model loading, safe inference,
-structured output, and full fallback on every error path.
-"""
 import numpy as np
 import cv2
 import os
 import logging
-from pathlib import Path
-from typing import Dict, Any, Union
+import asyncio
 
 logger = logging.getLogger(__name__)
 
 # ─────────────────────────────────────────
-# CONFIG
+# 1. LABEL CONFIG 
 # ─────────────────────────────────────────
+# NOTE: Make sure the ALZ_CLASSES order exactly matches what Colab printed!
+TUMOR_CLASSES = ["Glioma", "Meningioma", "No Tumor", "Pituitary"]
+STROKE_CLASSES = ["No Stroke", "Stroke"] 
+ALZ_CLASSES = ["Mild Demented", "Moderate Demented", "Non Demented", "Very Mild Demented"]
 
-CLASS_MAPPING = ["Glioma", "Meningioma", "No Tumor", "Pituitary"]
-
-ALZ_LABELS = [
-    "Mild Demented",
-    "Moderate Demented",
-    "Non Demented",
-    "Very Mild Demented"
-]
-
-# Normalize raw class-name → canonical DB enum key
-# All values must match DiseaseType enum values in models.py exactly
 LABEL_MAP = {
-    "glioma":              "GLIOMA",
-    "meningioma":          "MENINGIOMA",
-    "pituitary":           "PITUITARY",
-    "no_tumor":            "NO_TUMOR",
-    "very_mild_demented":  "VERY_MILD_DEMENTED",
-    "mild_demented":       "MILD_DEMENTED",
-    "moderate_demented":   "MODERATE_DEMENTED",
-    "non_demented":        "NON_DEMENTED",
-    "inconclusive":        "INCONCLUSIVE",
+    "glioma": "GLIOMA",
+    "meningioma": "MENINGIOMA",
+    "pituitary": "PITUITARY",
+    "no_tumor": "NO_TUMOR",
+    "stroke": "STROKE",
+    "no_stroke": "NO_STROKE", 
+    "very_mild_demented": "VERY_MILD_DEMENTED",
+    "mild_demented": "MILD_DEMENTED",
+    "moderate_demented": "MODERATE_DEMENTED",
+    "non_demented": "NON_DEMENTED",
+    "inconclusive": "INCONCLUSIVE",
 }
 
 # ─────────────────────────────────────────
-# FALLBACK RESULT (always valid structure)
+# 2. MODEL STORE
 # ─────────────────────────────────────────
-
-_FALLBACK_RESULT: Dict[str, Any] = {
-    "predicted_disease": "INCONCLUSIVE",
-    "confidence": 0.0,
-    "confidence_percent": "0.00%",
-    "confidence_level": "LOW",
-    "scan_type": "Unknown",
-    "disease_type": "unknown",
-    "all_predictions": {
-        "tumor_model": {"label": "INCONCLUSIVE", "confidence": 0.0},
-        "alz_model":   {"label": "INCONCLUSIVE", "confidence": 0.0},
-    },
-    "model_version": "4.1.1",
-    "fallback": True,
+_models = {
+    "mri_tumor": None,
+    "ct_stroke": None,
+    "pet_alzheimer": None
 }
 
-# ─────────────────────────────────────────
-# PREPROCESS
-# ─────────────────────────────────────────
-
-def preprocess_image(image_path: Union[str, Path]) -> np.ndarray:
-    """Read, normalise, and prepare an image for model inference."""
-    img = cv2.imread(str(image_path))
-
-    if img is None:
-        raise ValueError(f"Could not read image at path: {image_path}")
-
-    # Convert BGR → GRAY directly (avoids double-conversion bug)
-    img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-
-    # CLAHE contrast enhancement (critical for MRI)
-    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
-    img = clahe.apply(img)
-
-    img = cv2.resize(img, (224, 224))
-    img = img.astype("float32") / 255.0
-
-    # Stack to 3-channel so model input shape (224, 224, 3) is satisfied
-    img = np.stack([img] * 3, axis=-1)
-    img = np.expand_dims(img, axis=0)  # → (1, 224, 224, 3)
-
-    return img
-
-# ─────────────────────────────────────────
-# MODEL LOADING
-# ─────────────────────────────────────────
-
-_tumor_model = None
-_alz_model = None
 _models_loaded = False
 
-
-def load_models() -> bool:
-    """
-    Load both Keras models from disk.
-    Returns True on success, False on any failure.
-    Never raises – caller gets a bool.
-    """
-    global _tumor_model, _alz_model, _models_loaded
-
+def load_models():
+    global _models, _models_loaded
     try:
-        from tensorflow.keras.models import load_model  # type: ignore
+        from tensorflow.keras.models import load_model
 
-        tumor_path = os.path.abspath("app/ai_models/weights/brain_disease_model.h5")
-        alz_path   = os.path.abspath("app/ai_models/weights/mri_alzheimer_model.h5")
+        paths = {
+            "mri_tumor": "app/ai_models/weights/brain_disease_model.h5",
+            "ct_stroke": "app/ai_models/weights/ct_stroke_model.h5",
+            "pet_alzheimer": "app/ai_models/weights/pet_alzheimer_model.h5",
+        }
 
-        if not os.path.exists(tumor_path):
-            logger.error(f"Tumor model file missing: {tumor_path}")
-            return False
+        for key, path in paths.items():
+            abs_path = os.path.abspath(path)
+            if not os.path.exists(abs_path):
+                logger.warning(f"[{key.upper()}] model missing: {abs_path}")
+                continue
 
-        if not os.path.exists(alz_path):
-            logger.error(f"Alzheimer model file missing: {alz_path}")
-            return False
-
-        _tumor_model = load_model(tumor_path)
-        _alz_model   = load_model(alz_path)
-
-        logger.info(f"Tumor model   input={_tumor_model.input_shape} output={_tumor_model.output_shape}")
-        logger.info(f"Alz model     input={_alz_model.input_shape}   output={_alz_model.output_shape}")
-        logger.info("Both AI models loaded and validated successfully")
+            _models[key] = load_model(abs_path)
+            logger.info(f"[{key.upper()}] model loaded successfully")
 
         _models_loaded = True
         return True
 
     except Exception as e:
         logger.error(f"Model loading failed: {e}", exc_info=True)
-        _models_loaded = False
         return False
 
-
-# Attempt load at import time – failure is logged but does NOT crash the app
-try:
-    load_models()
-except Exception as _e:
-    logger.error(f"Unexpected error during model pre-load: {_e}", exc_info=True)
+# Initialize models on startup
+load_models()
 
 # ─────────────────────────────────────────
-# SAFE PREDICTION HELPERS
+# 3. CORE UTILITIES
 # ─────────────────────────────────────────
+def preprocess_image(image_path):
+    img = cv2.imread(str(image_path))
+    if img is None:
+        raise ValueError("Invalid image")
+    
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    img = cv2.resize(img, (224, 224))
+    
+    # ALL models now safely use 0-1 scaling
+    img = img.astype("float32") / 255.0 
+        
+    img = np.expand_dims(img, axis=0)
+    return img
 
-def safe_softmax(x: np.ndarray) -> np.ndarray:
-    """Numerically-stable softmax."""
+def softmax(x):
     e_x = np.exp(x - np.max(x))
     return e_x / e_x.sum()
 
+def run_model(model, image, classes):
+    if model is None:
+        return {"label": "MODEL_OFFLINE", "confidence": 0.0}
 
-def run_model(model, image: np.ndarray, class_names: list) -> Dict[str, Any]:
-    """
-    Run inference on a single model.
-    Returns a structured dict; never raises.
-    """
-    try:
-        preds = model.predict(image, verbose=0)[0]
+    preds = model.predict(image, verbose=0)[0]
+    
+    print("========================================")
+    print(f"RAW AI OUTPUT: {preds}")
 
-        # Apply softmax only if outputs are raw logits
-        if np.max(preds) > 1.0 or np.min(preds) < 0.0:
-            preds = safe_softmax(preds)
+    # Fallback for old 1-node binary models
+    if preds.size == 1:
+        prob = float(preds[0])
+        idx = 0 if prob > 0.5 else 1
+        conf = prob if idx == 0 else (1.0 - prob)
+    # Modern Categorical / 2-node Binary models
+    else:
+        if np.max(preds) > 1:
+            preds = softmax(preds)
+        idx = int(np.argmax(preds))
+        conf = float(preds[idx])
 
-        max_idx    = int(np.argmax(preds))
-        confidence = float(preds[max_idx])
+    label = classes[idx].lower().replace(" ", "_")
+    label = LABEL_MAP.get(label, "INCONCLUSIVE")
 
-        raw_label  = class_names[max_idx]
-        normalized = raw_label.lower().strip().replace(" ", "_")
-        mapped_label = LABEL_MAP.get(normalized, "INCONCLUSIVE")
+    print(f"FINAL DECISION: {label} with {conf*100:.2f}% raw confidence")
+    print("========================================")
 
-        return {
-            "label":      mapped_label,
-            "confidence": confidence,
-            "raw":        preds.tolist(),
-        }
-
-    except Exception as e:
-        logger.error(f"run_model failed: {e}", exc_info=True)
-        return {
-            "label":      "INCONCLUSIVE",
-            "confidence": 0.0,
-            "raw":        [],
-        }
-
+    return {"label": label, "confidence": conf}
 
 # ─────────────────────────────────────────
-# DECISION ENGINE
+# 4. PERFECTLY ISOLATED PIPELINES
 # ─────────────────────────────────────────
+def predict_mri(image):
+    # MRI is ONLY for Tumors
+    result = run_model(_models["mri_tumor"], image, TUMOR_CLASSES)
+    if result["label"] == "MODEL_OFFLINE": return "INCONCLUSIVE", 0.0, "system_error"
+    return result["label"], result["confidence"], "tumor"
 
-def decide_final(tumor_result: Dict, alz_result: Dict):
-    """
-    Strict tumor-first decision gate.
+def predict_ct(image):
+    # CT is ONLY for Strokes
+    result = run_model(_models["ct_stroke"], image, STROKE_CLASSES)
+    if result["label"] == "MODEL_OFFLINE": return "INCONCLUSIVE", 0.0, "system_error"
+    return result["label"], result["confidence"], "stroke"
 
-    Rules (in order):
-      1. tumor_label != NO_TUMOR AND conf > 0.50  → tumor wins, Alzheimer NEVER consulted
-      2. tumor_label == NO_TUMOR                  → check Alzheimer
-         2a. alz positive AND conf > 0.60         → alzheimers
-         2b. otherwise                             → NORMAL
-      3. Safety fallback (should never reach here) → UNKNOWN
+def predict_pet(image):
+    # PET is ONLY for Alzheimer's
+    result = run_model(_models["pet_alzheimer"], image, ALZ_CLASSES)
+    if result["label"] == "MODEL_OFFLINE": return "INCONCLUSIVE", 0.0, "system_error"
+    return result["label"], result["confidence"], "alzheimers"
 
-    The Alzheimer model CANNOT override tumor output under any conditions.
-
-    Returns (label: str, confidence: float, scan_type: str, disease_type: str)
-    """
-    t_label = str(tumor_result.get("label") or "NO_TUMOR")
-    t_conf  = float(tumor_result.get("confidence") or 0.0)
-    a_label = str(alz_result.get("label") or "NON_DEMENTED")
-    a_conf  = float(alz_result.get("confidence") or 0.0)
-
-    # Debug line — visible in server logs so you can verify per-scan
-    logger.info(
-        "decide_final | Tumor: %s (%.3f)  |  Alz: %s (%.3f)",
-        t_label, t_conf, a_label, a_conf
-    )
-
-    # ── CASE 1: Tumor detected ──────────────────────────────────────────
-    # Threshold 0.50: even moderate confidence in a tumor label beats
-    # anything the Alzheimer model can say.
-    TUMOR_NEGATIVE = ("NO_TUMOR", "INCONCLUSIVE")
-    if t_label not in TUMOR_NEGATIVE and t_conf > 0.65:
-        logger.info("Decision → TUMOR path: %s (%.3f)", t_label, t_conf)
-        return t_label, t_conf, "Tumor Scan", "tumor"
-
-    # ── CASE 2: No tumor → NOW check Alzheimer ──────────────────────────
-    # ONLY reached when tumor explicitly said NO_TUMOR.
-    # Alzheimer model is structurally gated here; it cannot be reached
-    # by any code path that produces a tumor label.
-    if t_label == "NO_TUMOR" and t_conf > 0.60:
-        ALZ_NEGATIVE = ("NON_DEMENTED", "INCONCLUSIVE")
-
-        if a_label not in ALZ_NEGATIVE and a_conf > 0.60:
-            logger.info("Decision → ALZHEIMER path: %s (%.3f)", a_label, a_conf)
-            return a_label, a_conf, "Alzheimer Scan", "alzheimers"
-
-        # Tumor negative + Alzheimer negative → healthy
-        logger.info("Decision → NORMAL path")
-        return "NORMAL", max(t_conf, a_conf), "Healthy Brain", "normal"
-
-    # ── CASE 3: Safety fallback ─────────────────────────────────────────
-    # Reached only when tumor returned INCONCLUSIVE (conf <= 0.50, not NO_TUMOR).
-    # Return tumor's best guess rather than silently flipping to Alzheimer.
-    logger.warning(
-        "Decision → FALLBACK: tumor was inconclusive %s (%.3f)", t_label, t_conf
-    )
-    if t_label not in TUMOR_NEGATIVE:
-        return t_label, t_conf, "Tumor Scan (uncertain)", "tumor"
-    return "INCONCLUSIVE", 0.0, "Uncertain", "unknown"
-
-
-
+# ─────────────────────────────────────────
+# 5. UI HELPERS
+# ─────────────────────────────────────────
 def calibrate_confidence(conf: float) -> float:
-    """Compress confidence into a realistic 0.60–0.95 range."""
+    if conf == 0.0: return 0.0
     return float(0.6 + (conf * 0.35))
 
-
-def get_prediction_confidence_level(confidence: float) -> str:
-    if confidence > 0.8:
-        return "HIGH"
-    elif confidence > 0.6:
-        return "MEDIUM"
+def get_prediction_confidence_level(conf: float) -> str:
+    if conf == 0.0: return "ERROR"
+    if conf > 0.8: return "HIGH"
+    elif conf > 0.6: return "MEDIUM"
     return "LOW"
 
-
 # ─────────────────────────────────────────
-# MAIN PIPELINE
+# 6. MAIN ENTRY & WRAPPER
 # ─────────────────────────────────────────
-
-def predict(image_path: Union[str, Path], scan_type: str = "MRI") -> Dict[str, Any]:
-    """
-    Full prediction pipeline.
-
-    Always returns a dict with at minimum:
-        predicted_disease: str   – canonical DiseaseType label or "NORMAL"
-        confidence:        float – calibrated confidence 0.60–0.95
-        disease_type:      str   – 'tumor' | 'alzheimers' | 'normal' | 'unknown'
-        all_predictions:   dict  – per-model results
-
-    Never raises. On any failure returns the fallback result.
-    """
-    import copy
-
-    # ── Guard: models must be loaded ──────────────────────────────────────
-    if not _models_loaded or _tumor_model is None or _alz_model is None:
-        logger.warning("Models not loaded – returning fallback result")
-        result = copy.deepcopy(_FALLBACK_RESULT)
-        result["error"] = "Models not loaded"
-        return result
-
+def _process_scan(image_path, scan_type="MRI"):
     try:
-        # 1. Preprocess
+        scan_type = scan_type.upper()
+        logger.info(f"====== ROUTING SCAN AS: {scan_type} ======")
+
+        # Preprocess the image (scaling is now universally True)
         image = preprocess_image(image_path)
 
-        # 2. Inference (each call is internally safe)
-        scan_type = scan_type.upper()
-
-        tumor_result = {"label": "INCONCLUSIVE", "confidence": 0.0}
-        alz_result   = {"label": "INCONCLUSIVE", "confidence": 0.0}
-
         if scan_type == "MRI":
-            # Run BOTH, but enforce strict priority
-            tumor_result = run_model(_tumor_model, image, CLASS_MAPPING)
-
-            # ONLY run Alzheimer if tumor says NO_TUMOR confidently
-            if tumor_result["label"] == "NO_TUMOR" and tumor_result["confidence"] > 0.60:
-                alz_result = run_model(_alz_model, image, ALZ_LABELS)
-
+            label, conf, dtype = predict_mri(image)
         elif scan_type == "CT":
-            # Future: Stroke model
-            tumor_result = {"label": "INCONCLUSIVE", "confidence": 0.0}
-
+            label, conf, dtype = predict_ct(image)
         elif scan_type == "PET":
-            # Future: Parkinson model
-            tumor_result = {"label": "INCONCLUSIVE", "confidence": 0.0}
+            label, conf, dtype = predict_pet(image)
+        else:
+            return {"predicted_disease": "INCONCLUSIVE", "confidence": 0.0, "scan_type": scan_type}
 
-        logger.info(f"Tumor raw result : {tumor_result}")
-        logger.info(f"Alzheimer raw result: {alz_result}")
+        calibrated_conf = calibrate_confidence(conf)
 
-        # 3. Decision fusion — now returns 4-tuple including disease_type
-        label, conf, scan_type, disease_type = decide_final(tumor_result, alz_result)
-
-        logger.info(
-            "Final decision: label=%s  conf=%.3f  type=%s  scan=%s",
-            label, conf, disease_type, scan_type
-        )
-
-        # 4. Calibrate confidence
-        conf = calibrate_confidence(conf)
-
-        # 5. Build structured response
         return {
-            "predicted_disease":  label,
-            "confidence":         conf,
-            "confidence_percent": f"{conf * 100:.2f}%",
-            "confidence_level":   get_prediction_confidence_level(conf),
-            "scan_type":          scan_type,
-            "disease_type":       disease_type,
-            "all_predictions": {
-                "tumor_model": {
-                    "label":      str(tumor_result.get("label", "INCONCLUSIVE")),
-                    "confidence": float(tumor_result.get("confidence", 0.0)),
-                },
-                "alz_model": {
-                    "label":      str(alz_result.get("label", "INCONCLUSIVE")),
-                    "confidence": float(alz_result.get("confidence", 0.0)),
-                },
-            },
-            "model_version": "4.1.1",
+            "predicted_disease": label,
+            "confidence": calibrated_conf,
+            "confidence_percent": f"{calibrated_conf*100:.2f}%",
+            "confidence_level": get_prediction_confidence_level(calibrated_conf),
+            "scan_type": scan_type,
+            "disease_type": dtype,
         }
 
     except Exception as e:
-        logger.error(f"Prediction pipeline failed: {e}", exc_info=True)
-        result = copy.deepcopy(_FALLBACK_RESULT)
-        result["error"] = str(e)
-        return result
-
-
-# ─────────────────────────────────────────
-# SERVICE WRAPPER
-# ─────────────────────────────────────────
-
-class BrainDiseasePredictor:
-    """Service-level wrapper for the prediction pipeline."""
-
-    def get_model_info(self) -> Dict[str, Any]:
+        logger.error(f"Prediction failed: {e}", exc_info=True)
         return {
-            "model_loaded":        _models_loaded,
-            "tumor_model_input":   _tumor_model.input_shape  if _tumor_model  else None,
-            "tumor_model_output":  _tumor_model.output_shape if _tumor_model  else None,
-            "alz_model_input":     _alz_model.input_shape    if _alz_model    else None,
-            "alz_model_output":    _alz_model.output_shape   if _alz_model    else None,
-            "classes":             CLASS_MAPPING + ALZ_LABELS,
-            "status":              "loaded" if _models_loaded else "not_loaded",
+            "predicted_disease": "INCONCLUSIVE", 
+            "confidence": 0.0, 
+            "confidence_percent": "0.00%",
+            "confidence_level": "ERROR"
         }
 
-    def predict_sync(self, image_path: Union[str, Path], scan_type: str = "MRI") -> Dict[str, Any]:
-        return predict(image_path, scan_type)
+class BrainDiseasePredictor:
+    def get_model_info(self):
+        return {
+            "models_loaded": _models_loaded,
+            "available_models": {k: v is not None for k, v in _models.items()}
+        }
 
-    async def predict(self, image_path: Union[str, Path], scan_type: str = "MRI") -> Dict[str, Any]:
-        return predict(image_path, scan_type)
-    
     async def predict(self, image_path, scan_type="MRI"):
-        print("DEBUG: predict called with", scan_type)
-        return predict(image_path, scan_type)
+        return await asyncio.to_thread(_process_scan, image_path, scan_type)

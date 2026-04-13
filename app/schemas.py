@@ -13,6 +13,8 @@ class ModelPrediction(BaseModel):
 class AllPredictions(BaseModel):
     tumor_model: ModelPrediction
     alz_model: ModelPrediction
+    stroke_model: ModelPrediction
+    parkinson_model: ModelPrediction
 
 # ============= ENUMS =============
 
@@ -40,6 +42,9 @@ class DiseaseTypeEnum(str, Enum):
     MODERATE_DEMENTED  = "MODERATE_DEMENTED"
     NORMAL             = "NORMAL"
     INCONCLUSIVE       = "INCONCLUSIVE"
+    STROKE             = "STROKE"
+    NO_STROKE          = "NO_STROKE"
+    PARKINSON          = "PARKINSON"
 
 # ============= USER SCHEMAS =============
 
