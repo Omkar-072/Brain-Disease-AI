@@ -4,62 +4,65 @@
 
 {% block content %}
 <!-- Hero Section -->
-<section class="hero-section bg-gradient-primary text-white py-5">
-    <div class="container">
+<section class="hero-section">
+    <div class="container fade-up">
         <div class="row align-items-center">
-            <div class="col-lg-6">
+            <div class="col-lg-6 hero-content">
                 <h1 class="display-4 fw-bold mb-4">
-                    <i class="fas fa-brain me-3"></i>Early Brain Disease Detection
+                    Early Brain Disease <br><span style="color: var(--primary-color);">Detection AI</span>
                 </h1>
-                <p class="lead mb-4">
-                    Advanced AI-powered system for early detection of brain diseases including Stroke, Epilepsy, Alzheimer's, Parkinson's, and Brain Tumors.
+                <p class="lead mb-4" style="font-size: 1.15rem;">
+                    Upload brain scans and receive instant, AI-powered diagnostic insights for Stroke, Epilepsy,
+                    Alzheimer's, Parkinson's, and Brain Tumors.
                 </p>
-                <div class="d-flex gap-3">
-                    <a href="/upload" class="btn btn-light btn-lg">
+                <div class="d-flex gap-3 mt-5">
+                    <a href="/upload" class="btn btn-primary btn-lg shadow-lg">
                         <i class="fas fa-upload me-2"></i>Upload Scan
                     </a>
-                    <a href="/diseases" class="btn btn-outline-light btn-lg">
+                    <a href="/chat" class="btn btn-outline-light btn-lg"
+                        style="border: 2px solid rgba(255,255,255,0.7); color: white;">
                         <i class="fas fa-info-circle me-2"></i>Learn More
                     </a>
                 </div>
             </div>
-            <div class="col-lg-6 text-center">
-                <img src="/static/images/brain-ai.svg" alt="Brain AI" class="img-fluid hero-image" style="max-height: 400px;">
+            <div class="col-lg-6 text-center mt-5 mt-lg-0 hero-content">
+                <img src="/static/images/brain-ai.svg" alt="Brain AI" class="img-fluid hero-image"
+                    style="max-height: 400px; opacity: 0.9;">
             </div>
         </div>
     </div>
 </section>
 
 <!-- Statistics Section -->
-<section class="py-5 bg-light">
-    <div class="container">
-        <div class="row text-center">
+<section class="py-5" style="margin-top: -30px; position: relative; z-index: 10;">
+    <div class="container fade-up" style="animation-delay: 0.2s;">
+        <div class="row text-center g-4">
             <div class="col-md-3">
                 <div class="stat-box">
-                    <i class="fas fa-brain fa-3x text-primary mb-3"></i>
-                    <h2 class="fw-bold">5+</h2>
-                    <p class="text-muted">Diseases Detected</p>
+                    <h2 class="stat-number">5+</h2>
+                    <p class="text-muted"><i class="fas fa-brain me-2" style="color: var(--primary-color);"></i>Diseases
+                        Detected</p>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="stat-box">
-                    <i class="fas fa-microscope fa-3x text-success mb-3"></i>
-                    <h2 class="fw-bold">95%</h2>
-                    <p class="text-muted">AI Accuracy</p>
+                    <h2 class="stat-number">95%</h2>
+                    <p class="text-muted"><i class="fas fa-microscope me-2" style="color: var(--success-color);"></i>AI
+                        Accuracy</p>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="stat-box">
-                    <i class="fas fa-clock fa-3x text-warning mb-3"></i>
-                    <h2 class="fw-bold">&lt;2 min</h2>
-                    <p class="text-muted">Analysis Time</p>
+                    <h2 class="stat-number">&lt;2m</h2>
+                    <p class="text-muted"><i class="fas fa-clock me-2" style="color: var(--warning-color);"></i>Analysis
+                        Time</p>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="stat-box">
-                    <i class="fas fa-shield-alt fa-3x text-danger mb-3"></i>
-                    <h2 class="fw-bold">100%</h2>
-                    <p class="text-muted">Secure & Private</p>
+                    <h2 class="stat-number">100%</h2>
+                    <p class="text-muted"><i class="fas fa-shield-alt me-2" style="color: var(--info-color);"></i>Secure
+                        & Private</p>
                 </div>
             </div>
         </div>
@@ -67,87 +70,95 @@
 </section>
 
 <!-- Diseases Section -->
-<section class="py-5">
-    <div class="container">
-        <h2 class="text-center mb-5">
-            <i class="fas fa-heartbeat me-2 text-danger"></i>Diseases We Detect
-        </h2>
-        <div class="row g-4">
+<section class="py-5 my-5">
+    <div class="container fade-up">
+        <div class="section-title">
+            <h2>Diseases We Detect</h2>
+            <p class="text-muted mx-auto" style="max-width: 600px;">Our advanced AI networks are trained on thousands of
+                medical scans to recognize intricate patterns denoting neurological disorders.</p>
+        </div>
+        <div class="row g-4 mt-4">
             <!-- Stroke -->
             <div class="col-md-4">
-                <div class="card h-100 disease-card">
-                    <div class="card-body text-center">
-                        <div class="disease-icon bg-danger text-white rounded-circle mx-auto mb-3">
-                            <i class="fas fa-bolt fa-2x"></i>
-                        </div>
-                        <h5 class="card-title">Stroke</h5>
-                        <p class="card-text text-muted">Brain attack caused by interrupted blood supply. Early detection can save lives.</p>
-                        <a href="/diseases/stroke" class="btn btn-outline-danger btn-sm">Learn More</a>
+                <div class="disease-card theme-stroke h-100 p-4">
+                    <div class="disease-icon">
+                        <i class="fas fa-bolt"></i>
+                    </div>
+                    <h5 class="text-center">Stroke</h5>
+                    <p class="text-center text-muted small mt-3">Brain attack caused by interrupted blood supply.
+                        Immediate detection is crucial for survival.</p>
+                    <div class="text-center mt-4">
+                        <a href="/chat" class="btn btn-outline-primary btn-sm rounded-pill px-4">Ask AI Details</a>
                     </div>
                 </div>
             </div>
             <!-- Epilepsy -->
             <div class="col-md-4">
-                <div class="card h-100 disease-card">
-                    <div class="card-body text-center">
-                        <div class="disease-icon bg-warning text-white rounded-circle mx-auto mb-3">
-                            <i class="fas fa-bolt fa-2x"></i>
-                        </div>
-                        <h5 class="card-title">Epilepsy</h5>
-                        <p class="card-text text-muted">Neurological disorder causing recurrent seizures. Manageable with proper treatment.</p>
-                        <a href="/diseases/epilepsy" class="btn btn-outline-warning btn-sm">Learn More</a>
+                <div class="disease-card theme-epilepsy h-100 p-4">
+                    <div class="disease-icon">
+                        <i class="fas fa-wave-square"></i>
+                    </div>
+                    <h5 class="text-center">Epilepsy</h5>
+                    <p class="text-center text-muted small mt-3">Neurological disorder causing unpredictable seizures.
+                        Early management significantly improves life.</p>
+                    <div class="text-center mt-4">
+                        <a href="/chat" class="btn btn-outline-primary btn-sm rounded-pill px-4">Ask AI Details</a>
                     </div>
                 </div>
             </div>
             <!-- Alzheimer's -->
             <div class="col-md-4">
-                <div class="card h-100 disease-card">
-                    <div class="card-body text-center">
-                        <div class="disease-icon bg-info text-white rounded-circle mx-auto mb-3">
-                            <i class="fas fa-memory fa-2x"></i>
-                        </div>
-                        <h5 class="card-title">Alzheimer's</h5>
-                        <p class="card-text text-muted">Progressive memory loss and cognitive decline. Early detection enables better care.</p>
-                        <a href="/diseases/alzheimer" class="btn btn-outline-info btn-sm">Learn More</a>
+                <div class="disease-card theme-alzheimer h-100 p-4">
+                    <div class="disease-icon">
+                        <i class="fas fa-memory"></i>
+                    </div>
+                    <h5 class="text-center">Alzheimer's</h5>
+                    <p class="text-center text-muted small mt-3">Progressive cognitive decline and memory loss. Baseline
+                        scans track progression effectively.</p>
+                    <div class="text-center mt-4">
+                        <a href="/chat" class="btn btn-outline-primary btn-sm rounded-pill px-4">Ask AI Details</a>
                     </div>
                 </div>
             </div>
             <!-- Parkinson's -->
             <div class="col-md-4">
-                <div class="card h-100 disease-card">
-                    <div class="card-body text-center">
-                        <div class="disease-icon bg-success text-white rounded-circle mx-auto mb-3">
-                            <i class="fas fa-hand-paper fa-2x"></i>
-                        </div>
-                        <h5 class="card-title">Parkinson's</h5>
-                        <p class="card-text text-muted">Movement disorder causing tremors. Early treatment slows progression.</p>
-                        <a href="/diseases/parkinson" class="btn btn-outline-success btn-sm">Learn More</a>
+                <div class="disease-card theme-parkinson h-100 p-4">
+                    <div class="disease-icon">
+                        <i class="fas fa-hands"></i>
+                    </div>
+                    <h5 class="text-center">Parkinson's</h5>
+                    <p class="text-center text-muted small mt-3">Movement disorder resulting in tremors. Targeted
+                        treatments rely on fast diagnosis.</p>
+                    <div class="text-center mt-4">
+                        <a href="/chat" class="btn btn-outline-primary btn-sm rounded-pill px-4">Ask AI Details</a>
                     </div>
                 </div>
             </div>
             <!-- Brain Tumor -->
             <div class="col-md-4">
-                <div class="card h-100 disease-card">
-                    <div class="card-body text-center">
-                        <div class="disease-icon bg-purple text-white rounded-circle mx-auto mb-3">
-                            <i class="fas fa-circle fa-2x"></i>
-                        </div>
-                        <h5 class="card-title">Brain Tumor</h5>
-                        <p class="card-text text-muted">Abnormal cell growth in the brain. Early detection improves outcomes.</p>
-                        <a href="/diseases/brain_tumor" class="btn btn-outline-secondary btn-sm">Learn More</a>
+                <div class="disease-card theme-tumor h-100 p-4">
+                    <div class="disease-icon">
+                        <i class="fas fa-dna"></i>
+                    </div>
+                    <h5 class="text-center">Brain Tumor</h5>
+                    <p class="text-center text-muted small mt-3">Abnormal cell growth mapped with high-precision MRI
+                        contrast scans for oncology.</p>
+                    <div class="text-center mt-4">
+                        <a href="/chat" class="btn btn-outline-primary btn-sm rounded-pill px-4">Ask AI Details</a>
                     </div>
                 </div>
             </div>
             <!-- Healthy -->
             <div class="col-md-4">
-                <div class="card h-100 disease-card">
-                    <div class="card-body text-center">
-                        <div class="disease-icon bg-primary text-white rounded-circle mx-auto mb-3">
-                            <i class="fas fa-check fa-2x"></i>
-                        </div>
-                        <h5 class="card-title">Healthy Brain</h5>
-                        <p class="card-text text-muted">No abnormalities detected. Regular checkups maintain brain health.</p>
-                        <a href="/diseases" class="btn btn-outline-primary btn-sm">Learn More</a>
+                <div class="disease-card theme-healthy h-100 p-4">
+                    <div class="disease-icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <h5 class="text-center">Healthy Brain</h5>
+                    <p class="text-center text-muted small mt-3">No recognizable abnormalities detected. Routine
+                        checkups ensure lasting neurological health.</p>
+                    <div class="text-center mt-4">
+                        <a href="/chat" class="btn btn-outline-primary btn-sm rounded-pill px-4">Ask AI Details</a>
                     </div>
                 </div>
             </div>
@@ -156,106 +167,63 @@
 </section>
 
 <!-- How It Works Section -->
-<section class="py-5 bg-light">
-    <div class="container">
-        <h2 class="text-center mb-5">
-            <i class="fas fa-cogs me-2 text-primary"></i>How It Works
-        </h2>
-        <div class="row">
-            <div class="col-md-3 text-center">
+<section class="py-5" style="background: white; border-top: 1px solid rgba(0,0,0,0.05);">
+    <div class="container fade-up">
+        <div class="section-title">
+            <h2>How It Works</h2>
+            <p class="text-muted">A seamless pipeline from unstructured medical imaging to an actionable diagnosis.</p>
+        </div>
+        <div class="row mt-5">
+            <div class="col-md-3 text-center mb-4">
                 <div class="step-number">1</div>
                 <h5>Upload Scan</h5>
-                <p class="text-muted">Upload your MRI or CT brain scan image</p>
+                <p class="text-muted small">Upload your MRI or CT brain scan image securely</p>
             </div>
-            <div class="col-md-3 text-center">
+            <div class="col-md-3 text-center mb-4">
                 <div class="step-number">2</div>
                 <h5>AI Analysis</h5>
-                <p class="text-muted">Our AI processes and analyzes the scan</p>
+                <p class="text-muted small">Deep neural networks process the image</p>
             </div>
-            <div class="col-md-3 text-center">
+            <div class="col-md-3 text-center mb-4">
                 <div class="step-number">3</div>
                 <h5>Get Results</h5>
-                <p class="text-muted">Receive detailed prediction results</p>
+                <p class="text-muted small">Receive detailed mapping & confidence scores</p>
             </div>
-            <div class="col-md-3 text-center">
+            <div class="col-md-3 text-center mb-4">
                 <div class="step-number">4</div>
-                <h5>Consult Doctor</h5>
-                <p class="text-muted">Share results with your healthcare provider</p>
+                <h5>Consult</h5>
+                <p class="text-muted small">Share generated reports with your neurologist</p>
             </div>
         </div>
     </div>
 </section>
 
 <!-- CTA Section -->
-<section class="py-5 bg-primary text-white">
-    <div class="container text-center">
-        <h2 class="mb-4">Ready to Get Started?</h2>
-        <p class="lead mb-4">Upload your brain scan now and get AI-powered analysis in minutes.</p>
-        <div class="d-flex justify-content-center gap-3">
-            <a href="/register" class="btn btn-light btn-lg">
+<section class="py-5" style="background: var(--gradient-primary); color: white;">
+    <div class="container text-center fade-up">
+        <h2 class="mb-4 text-white">Ready to Get Started?</h2>
+        <p class="lead mb-4" style="color: rgba(255,255,255,0.9);">Upload your brain scan now and get AI-powered
+            analysis in minutes.</p>
+        <div class="d-flex justify-content-center gap-3 mt-4">
+            <a href="/register" class="btn btn-light btn-lg text-primary shadow-lg fw-bold">
                 <i class="fas fa-user-plus me-2"></i>Create Account
             </a>
-            <a href="/chatbot" class="btn btn-outline-light btn-lg">
-                <i class="fas fa-robot me-2"></i>Talk to AI Bot
+            <a href="/chat" class="btn btn-outline-light btn-lg fw-bold" style="border-width: 2px;">
+                <i class="fas fa-robot me-2"></i>Talk to AI
             </a>
         </div>
     </div>
 </section>
 
 <!-- Disclaimer Banner -->
-<section class="py-3 bg-warning">
+<section class="py-3" style="background: rgba(245, 158, 11, 0.1);">
     <div class="container">
-        <div class="d-flex align-items-center justify-content-center">
-            <i class="fas fa-exclamation-triangle fa-2x me-3"></i>
-            <p class="mb-0"><strong>Medical Disclaimer:</strong> This AI system is for informational purposes only and should not replace professional medical advice. Always consult a qualified healthcare provider for diagnosis and treatment.</p>
+        <div class="d-flex align-items-center justify-content-center flex-wrap">
+            <i class="fas fa-exclamation-triangle fa-2x me-3 text-warning"></i>
+            <p class="mb-0 text-muted small" style="max-width: 800px;"><strong>Medical Disclaimer:</strong> This AI
+                system is for informational purposes only and should not replace professional medical advice. Always
+                consult a qualified healthcare provider for diagnosis and treatment.</p>
         </div>
     </div>
 </section>
-{% endblock %}
-
-{% block extra_css %}
-<style>
-    .hero-section {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    }
-    
-    .disease-icon {
-        width: 80px;
-        height: 80px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-    
-    .disease-card {
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
-    
-    .disease-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-    }
-    
-    .step-number {
-        width: 60px;
-        height: 60px;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 24px;
-        font-weight: bold;
-        margin: 0 auto 15px;
-    }
-    
-    .bg-purple {
-        background-color: #6f42c1 !important;
-    }
-    
-    .stat-box {
-        padding: 20px;
-    }
-</style>
 {% endblock %}

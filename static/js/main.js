@@ -366,23 +366,7 @@ function initScrollToTop() {
  * Update navbar based on auth status
  */
 function updateNavbar() {
-    const authLinks = document.getElementById('auth-links');
-    const userLinks = document.getElementById('user-links');
-
-    if (isAuthenticated()) {
-        if (authLinks) authLinks.style.display = 'none';
-        if (userLinks) userLinks.style.display = 'block';
-
-        // Update user info if available
-        const user = JSON.parse(localStorage.getItem('user') || '{}');
-        const userNameEl = document.getElementById('user-name');
-        if (userNameEl && user.name) {
-            userNameEl.textContent = user.name;
-        }
-    } else {
-        if (authLinks) authLinks.style.display = 'block';
-        if (userLinks) userLinks.style.display = 'none';
-    }
+    // Rely completely on base.html's inline script to render Auth Links properly.
 }
 
 // ============== Disease Information ==============

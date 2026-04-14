@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block title %}FAQ - Brain Disease AI{% endblock %}
+
+{% block content %}
+<!-- FAQ Hero -->
+<section class="py-5 bg-light" style="background: var(--gradient-primary) !important; color: white;">
+    <div class="container text-center py-4 fade-up">
+        <h1 class="display-5 fw-bold text-white mb-3"><i class="fas fa-question-circle me-3"></i>Frequently Asked Questions</h1>
+        <p class="lead" style="color: rgba(255,255,255,0.9);">Everything you need to know about our AI-powered brain disease detection system.</p>
+    </div>
+</section>
+
+<!-- FAQ Accordion -->
+<section class="py-5" style="margin-top: -30px; position: relative; z-index: 10;">
+    <div class="container fade-up" style="animation-delay: 0.2s;">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card shadow-lg border-0" style="border-radius: var(--border-radius);">
+                    <div class="card-body p-4 p-md-5">
+                        
+                        <div class="accordion" id="faqAccordion">
+                            <!-- Question 1 -->
+                            <div class="accordion-item border-0 mb-3" style="box-shadow: var(--shadow-soft); border-radius: var(--border-radius-sm) !important; overflow: hidden;">
+                                <h2 class="accordion-header" id="headingOne">
+                                    <button class="accordion-button fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne" style="color: var(--text-heading); background: white;">
+                                        How accurate is the AI diagnosis?
+                                    </button>
+                                </h2>
+                                <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#faqAccordion">
+                                    <div class="accordion-body text-muted">
+                                        Our AI model has been trained on thousands of brain scans and achieves <strong>high accuracy (+95%)</strong> on standardized datasets. However, it should be used strictly as a screening tool, not a definitive medical diagnosis. Always consult a medical professional for clinical treatment.
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Question 2 -->
+                            <div class="accordion-item border-0 mb-3" style="box-shadow: var(--shadow-soft); border-radius: var(--border-radius-sm) !important; overflow: hidden;">
+                                <h2 class="accordion-header" id="headingTwo">
+                                    <button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo" style="color: var(--text-heading); background: white;">
+                                        What file formats are supported?
+                                    </button>
+                                </h2>
+                                <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#faqAccordion">
+                                    <div class="accordion-body text-muted">
+                                        We support standard image formats such as <strong>JPEG and PNG</strong> for instant scanning. Support for DICOM (.dcm) and NIfTI (.nii) medical formats relies on specific server preprocessing capabilities.
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Question 3 -->
+                            <div class="accordion-item border-0 mb-3" style="box-shadow: var(--shadow-soft); border-radius: var(--border-radius-sm) !important; overflow: hidden;">
+                                <h2 class="accordion-header" id="headingThree">
+                                    <button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree" style="color: var(--text-heading); background: white;">
+                                        Is my medical data secure?
+                                    </button>
+                                </h2>
+                                <div id="collapseThree" class="accordion-collapse collapse" aria-labelledby="headingThree" data-bs-parent="#faqAccordion">
+                                    <div class="accordion-body text-muted">
+                                        <strong>Yes.</strong> All uploads are encrypted and processed in our secure environment. Your scans are tied strictly to your authenticated session using industry-standard JWT protocols. You control your data and can delete your scan history at any time.
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Question 4 -->
+                            <div class="accordion-item border-0 mb-3" style="box-shadow: var(--shadow-soft); border-radius: var(--border-radius-sm) !important; overflow: hidden;">
+                                <h2 class="accordion-header" id="headingFour">
+                                    <button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFour" aria-expanded="false" aria-controls="collapseFour" style="color: var(--text-heading); background: white;">
+                                        What diseases can the system detect?
+                                    </button>
+                                </h2>
+                                <div id="collapseFour" class="accordion-collapse collapse" aria-labelledby="headingFour" data-bs-parent="#faqAccordion">
+                                    <div class="accordion-body text-muted">
+                                        Currently, our neural networks are optimized to classify and detect:
+                                        <ul>
+                                            <li>Stroke Indicators</li>
+                                            <li>Epilepsy / Seizure Patterns</li>
+                                            <li>Alzheimer's Disease Progression</li>
+                                            <li>Parkinson's Disease Flags</li>
+                                            <li>Brain Tumors (Glioma, Meningioma, Pituitary)</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Question 5 -->
+                            <div class="accordion-item border-0" style="box-shadow: var(--shadow-soft); border-radius: var(--border-radius-sm) !important; overflow: hidden;">
+                                <h2 class="accordion-header" id="headingFive">
+                                    <button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFive" aria-expanded="false" aria-controls="collapseFive" style="color: var(--text-heading); background: white;">
+                                        How long does analysis take?
+                                    </button>
+                                </h2>
+                                <div id="collapseFive" class="accordion-collapse collapse" aria-labelledby="headingFive" data-bs-parent="#faqAccordion">
+                                    <div class="accordion-body text-muted">
+                                        Due to our optimized inference engine, most standard MRI and CT scans are analyzed and mapped in <strong>under 2 minutes</strong>, returning accurate confidence scores instantly to your dashboard.
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                        
+                        <div class="mt-5 text-center px-4 py-4 rounded" style="background: var(--bg-page);">
+                            <h5>Still have questions?</h5>
+                            <p class="text-muted small">Our AI Health Assistant is available 24/7 to answer anything else.</p>
+                            <a href="/chat" class="btn btn-outline-primary btn-sm px-4 rounded-pill mt-2">Ask the Chatbot</a>
+                        </div>
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .accordion-button:not(.collapsed) {
+        color: var(--primary-dark) !important;
+        background-color: var(--primary-light) !important;
+        box-shadow: inset 0 -1px 0 rgba(0,0,0,.125);
+    }
+    .accordion-button:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 0.25rem rgba(14, 165, 233, 0.25);
+    }
+</style>
+{% endblock %}

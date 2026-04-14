@@ -91,6 +91,36 @@ DISEASES = {
         "symptoms": ["Headaches", "Vision problems", "Hormonal imbalance", "Fatigue", "Mood changes"],
         "risk_factors": ["Genetics (MEN1 syndrome)", "Family history", "Age"]
     },
+    "stroke": {
+        "name": "Stroke",
+        "description": "A medical emergency where poor blood flow to the brain causes cell death.",
+        "symptoms": ["Sudden numbness", "Confusion", "Trouble speaking", "Loss of balance", "Severe headache"],
+        "risk_factors": ["High blood pressure", "Smoking", "Diabetes", "High cholesterol", "Age"]
+    },
+    "epilepsy": {
+        "name": "Epilepsy",
+        "description": "A central nervous system disorder in which brain activity becomes abnormal, causing seizures.",
+        "symptoms": ["Uncontrollable jerking movements", "Temporary confusion", "Staring spells", "Loss of consciousness"],
+        "risk_factors": ["Head trauma", "Brain conditions", "Infectious diseases", "Prenatal injury"]
+    },
+    "alzheimer": {
+        "name": "Alzheimer's Disease",
+        "description": "A progressive disease that destroys memory and other important mental functions.",
+        "symptoms": ["Memory loss", "Difficulty thinking and reasoning", "Making judgments", "Personality changes"],
+        "risk_factors": ["Age", "Family history", "Genetics", "Head trauma", "Poor heart health"]
+    },
+    "parkinson": {
+        "name": "Parkinson's Disease",
+        "description": "A progressive nervous system disorder that affects movement.",
+        "symptoms": ["Tremors", "Slowed movement", "Rigid muscles", "Impaired posture", "Speech changes"],
+        "risk_factors": ["Age", "Heredity", "Sex (men are more likely)", "Exposure to toxins"]
+    },
+    "brain_tumor": {
+        "name": "General Brain Tumor",
+        "description": "A mass or growth of abnormal cells in your brain.",
+        "symptoms": ["Persistent headaches", "Vision/hearing problems", "Seizures", "Personality changes"],
+        "risk_factors": ["Radiation exposure", "Family history", "Chemical exposure"]
+    }
 }
 
 # Treatment Information — matches the 4 trained MRI model classes
@@ -119,6 +149,36 @@ TREATMENTS = {
         "lifestyle": ["Hormone level monitoring", "Regular endocrinology visits", "Eye exams"],
         "specialists": ["Endocrinologist", "Neurosurgeon", "Ophthalmologist"]
     },
+    "stroke": {
+        "medications": ["TPA (alteplase)", "Blood thinners", "Statins", "Blood pressure meds"],
+        "procedures": ["Emergency endovascular procedures", "Carotid endarterectomy", "Angioplasty"],
+        "lifestyle": ["Quit smoking", "Healthy diet", "Exercise", "Limit alcohol"],
+        "specialists": ["Neurologist", "Physical Therapist", "Occupational Therapist"]
+    },
+    "epilepsy": {
+        "medications": ["Anti-seizure medications (e.g., Levetiracetam, Lamotrigine)", "Nerve pain medications"],
+        "procedures": ["Vagus nerve stimulation", "Resective surgery", "Deep brain stimulation"],
+        "lifestyle": ["Ketogenic diet", "Adequate sleep", "Stress management"],
+        "specialists": ["Neurologist (Epileptologist)", "Neurosurgeon"]
+    },
+    "alzheimer": {
+        "medications": ["Cholinesterase inhibitors (Donepezil)", "Memantine", "Aducanumab"],
+        "procedures": ["Cognitive therapy", "Clinical trials"],
+        "lifestyle": ["Physical exercise", "Social engagement", "Nutritious diet", "Mental stimulation"],
+        "specialists": ["Neurologist", "Geriatrician", "Psychiatrist"]
+    },
+    "parkinson": {
+        "medications": ["Carbidopa-levodopa", "Dopamine agonists", "MAO B inhibitors"],
+        "procedures": ["Deep brain stimulation (DBS)", "Physical therapy"],
+        "lifestyle": ["Aerobic exercise", "Massage therapy", "Tai chi / Yoga"],
+        "specialists": ["Neurologist (Movement Disorder Specialist)", "Physical Therapist"]
+    },
+    "brain_tumor": {
+        "medications": ["Chemotherapy", "Targeted drug therapy", "Corticosteroids"],
+        "procedures": ["Surgery", "Radiation therapy", "Radiosurgery"],
+        "lifestyle": ["Palliative care", "Physical therapy", "Nutritional support"],
+        "specialists": ["Neuro-oncologist", "Neurosurgeon", "Radiation oncologist"]
+    }
 }
 
 # Hospital Recommendations (Static Data)

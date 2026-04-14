@@ -246,6 +246,16 @@ async def chat_page(request: Request):
         return RedirectResponse(url="/", status_code=302)
 
 
+@app.get("/faq", response_class=HTMLResponse)
+async def faq_page(request: Request):
+    """FAQ page"""
+    try:
+        return templates.TemplateResponse(request, name="faq.html", context={})
+    except Exception as e:
+        logger.error(f"Error rendering faq page: {e}", exc_info=True)
+        return RedirectResponse(url="/", status_code=302)
+
+
 @app.get("/dashboard/scans/{scan_id}", response_class=HTMLResponse)
 async def scan_detail_page(request: Request, scan_id: str):
     """Scan detail/results page"""

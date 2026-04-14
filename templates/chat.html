@@ -7,7 +7,7 @@
     <div class="row justify-content-center">
         <div class="col-lg-10">
             <div class="card shadow chatbot-container">
-                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <div class="card-header text-white d-flex justify-content-between align-items-center" style="background: var(--gradient-primary) !important;">
                     <div>
                         <h4 class="mb-0"><i class="fas fa-robot me-2"></i>Brain Health Assistant</h4>
                         <small>Ask questions about brain diseases, symptoms, and treatments</small>
@@ -43,10 +43,9 @@
                                 
                                 <hr>
                                 
-                                <h6 class="text-muted mb-3"><i class="fas fa-history me-1"></i>Recent Topics</h6>
-                                <div id="recentTopics" class="small">
-                                    <p class="text-muted">No recent topics</p>
-                                </div>
+                                <button class="btn btn-primary w-100 fw-bold shadow" style="background: var(--gradient-primary); border: none;" onclick="clearChat()">
+                                    <i class="fas fa-plus me-2"></i>New Chat
+                                </button>
                             </div>
                         </div>
                         
@@ -141,7 +140,7 @@
     }
     
     .bot-message .message-avatar {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: var(--gradient-primary);
         color: white;
     }
     
@@ -195,7 +194,7 @@
         width: 8px;
         height: 8px;
         border-radius: 50%;
-        background: #667eea;
+        background: var(--primary-color);
         animation: typing 1s infinite ease-in-out;
     }
     
@@ -213,8 +212,25 @@
     }
     
     #messageInput:focus {
-        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.25);
-        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.25);
+        border-color: var(--primary-color);
+    }
+    
+    /* Mobile Responsiveness for Chatbot */
+    @media (max-width: 768px) {
+        .chatbot-container {
+            height: auto;
+            min-height: auto;
+        }
+        .quick-actions-panel {
+            max-height: none;
+            border-bottom: 1px solid #dee2e6;
+            border-right: none !important;
+        }
+        .chat-messages {
+            max-height: 50vh;
+            min-height: 400px;
+        }
     }
 </style>
 {% endblock %}
@@ -227,7 +243,6 @@ const messageInput = document.getElementById('messageInput');
 const sendBtn = document.getElementById('sendBtn');
 
 let sessionId = localStorage.getItem('chat_session_id') || generateSessionId();
-let recentTopics = JSON.parse(localStorage.getItem('recent_topics') || '[]');
 
 function generateSessionId() {
     const id = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
@@ -292,9 +307,6 @@ async function sendMessage(message) {
     // Add user message
     addMessage(message, true);
     
-    // Update recent topics
-    updateRecentTopics(message);
-    
     // Clear input
     messageInput.value = '';
     sendBtn.disabled = true;
@@ -339,37 +351,7 @@ async function sendMessage(message) {
     }
 }
 
-function updateRecentTopics(message) {
-    // Extract topic from message (simplified)
-    const topic = message.length > 40 ? message.substring(0, 40) + '...' : message;
-    
-    // Remove duplicates and add to front
-    recentTopics = recentTopics.filter(t => t !== topic);
-    recentTopics.unshift(topic);
-    
-    // Keep only last 5
-    recentTopics = recentTopics.slice(0, 5);
-    
-    localStorage.setItem('recent_topics', JSON.stringify(recentTopics));
-    displayRecentTopics();
-}
 
-function displayRecentTopics() {
-    const container = document.getElementById('recentTopics');
-    
-    if (recentTopics.length === 0) {
-        container.innerHTML = '<p class="text-muted">No recent topics</p>';
-        return;
-    }
-    
-    container.innerHTML = recentTopics.map(topic => `
-        <div class="recent-topic mb-2">
-            <a href="#" class="text-decoration-none text-muted" onclick="sendMessage('${topic.replace(/'/g, "\\'")}'); return false;">
-                <i class="fas fa-chevron-right me-1"></i>${topic}
-            </a>
-        </div>
-    `).join('');
-}
 
 function clearChat() {
     chatMessages.innerHTML = `
@@ -403,8 +385,7 @@ document.querySelectorAll('.quick-action').forEach(btn => {
     });
 });
 
-// Initialize recent topics
-displayRecentTopics();
+
 
 // Focus on input
 messageInput.focus();

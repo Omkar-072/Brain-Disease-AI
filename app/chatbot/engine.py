@@ -21,57 +21,74 @@ class Intent:
     entities: Dict[str, Any]
 
 
-# Intent patterns (regex-based)
-INTENT_PATTERNS = {
+# Machine Learning Training Corpus
+TRAINING_CORPUS = {
     "greeting": [
-        r"\b(hi|hello|hey|greetings|good\s*(morning|afternoon|evening))\b",
-        r"^(hi|hello|hey)\s*$"
+        "hi", "hello", "hey", "greetings", "good morning", "good afternoon", "good evening", 
+        "hey there", "hi doctor", "hello assistant", "good day", "hiya"
     ],
     "farewell": [
-        r"\b(bye|goodbye|see\s*you|take\s*care|farewell)\b"
+        "bye", "goodbye", "see you later", "take care", "farewell", "catch you later",
+        "i have to go", "later", "good night", "exit", "quit"
     ],
     "help": [
-        r"\b(help|assist|support|how\s*(do|can)\s*i|what\s*can\s*you)\b",
-        r"\b(how\s*to\s*use|guide|tutorial)\b"
+        "help", "assist me", "i need support", "how do i use this", "what can you do",
+        "guide me", "how to use the system", "show me a tutorial", "what are your features",
+        "can you help me out", "help me please", "i am confused what to do"
     ],
     "symptoms": [
-        r"\b(symptom|sign|indication|what\s*are\s*the\s*symptoms)\b",
-        r"\b(feel|feeling|experiencing)\s*(headache|dizzy|numb|weak|confused)\b"
+        "what are the symptoms", "i feel headache", "im feeling dizzy", 
+        "experiencing numbness", "i feel weak", "what is a sign of", 
+        "symptoms of brain disease", "i feel terrible", "my head hurts heavily",
+        "signs and symptoms", "i am confused and dizzy", "frequent headaches",
+        "can you list the symptoms of"
     ],
     "disease_info": [
-        r"\b(what\s*is|tell\s*me\s*about|explain|information\s*about)\s*(stroke|epilepsy|alzheimer|parkinson|brain\s*tumor)\b",
-        r"\b(stroke|epilepsy|alzheimer|parkinson|brain\s*tumor)\s*(information|details|facts)\b"
+        "what is stroke", "tell me about epilepsy", "explain alzheimers", 
+        "information about parkinsons", "details on brain tumor", "what is this disease",
+        "what does alzheimer disease do", "explain stroke in detail", "facts about tumors",
+        "tumor information", "tell me facts about brain conditions", "what is dementia"
     ],
     "treatment": [
-        r"\b(treatment|cure|medicine|medication|therapy|how\s*to\s*treat)\b",
-        r"\b(can\s*it\s*be\s*(cured|treated)|is\s*there\s*a\s*cure)\b"
+        "treatment cure", "what medicine should i take", "medication for this",
+        "is there a therapy", "how to treat it", "can it be cured", "is there a cure",
+        "how to cure stroke", "what are the treatment options", "surgical procedures",
+        "what drugs to take", "cure for tumor"
     ],
     "precaution": [
-        r"\b(precaution|prevent|avoid|safety|risk\s*factor)\b",
-        r"\b(how\s*to\s*(prevent|avoid)|what\s*to\s*avoid)\b"
+        "precaution prevent", "how to avoid", "safety risk factor", "how to prevent stroke",
+        "what to avoid for alzheimers", "how can i protect my brain", "diet for brain health",
+        "how to prevent brain tumors", "lifestyle changes", "risk factors to avoid",
+        "safety precautions"
     ],
     "scan_upload": [
-        r"\b(upload|scan|mri|ct\s*scan|image|analyze)\b",
-        r"\b(how\s*to\s*upload|submit\s*scan)\b"
+        "upload scan mri ct image analyze", "how to upload scan", "submit my mri",
+        "where do i upload my ct scan", "analyze my image please", "scan analysis",
+        "brain scan upload process", "where can i put my image", "i want to test my scan"
     ],
     "results": [
-        r"\b(result|prediction|diagnosis|analysis|report)\b",
-        r"\b(my\s*results|scan\s*results|what\s*does.*mean)\b"
+        "result prediction diagnosis analysis report", "my results", "scan results",
+        "what does my report mean", "explain my diagnosis", "can you show me my prediction",
+        "analysis result", "what did the ai find", "tell me the analysis"
     ],
     "disclaimer": [
-        r"\b(disclaimer|accuracy|reliable|trust|can\s*i\s*trust)\b",
-        r"\b(is\s*this\s*accurate|how\s*accurate)\b"
+        "disclaimer accuracy reliable trust", "can i trust this ai", "is this accurate",
+        "how reliable is the result", "how accurate is the diagnosis", "can i trust the prediction",
+        "medical accuracy", "is this system 100% correct", "false positive rate"
     ],
     "emergency": [
-        r"\b(emergency|urgent|immediate|serious|critical)\b",
-        r"\b(should\s*i\s*(go\s*to|visit)\s*(hospital|doctor|er))\b"
+        "emergency urgent immediate serious critical", "should i go to hospital",
+        "i need a doctor now", "visit er", "it is very urgent", "im having a stroke right now",
+        "this is an emergency", "i am dying what do i do", "please help me quick"
     ],
     "hospital": [
-        r"\b(hospital|doctor|specialist|clinic|where\s*to\s*go)\b",
-        r"\b(recommend.*hospital|find.*doctor)\b"
+        "hospital doctor specialist clinic where to go", "recommend hospital",
+        "find doctor near me", "best neurologist", "where should i get evaluated",
+        "which clinic to visit", "recommend a neurosurgeon", "hospital locations"
     ],
     "thanks": [
-        r"\b(thank|thanks|appreciate|grateful)\b"
+        "thank thanks appreciate grateful", "thank you so much", "i appreciate it",
+        "thanks a lot bot", "you were very helpful", "thank you doctor", "cheers"
     ]
 }
 
@@ -91,10 +108,34 @@ class ChatbotEngine:
     def __init__(self):
         self.context: Dict[str, Any] = {}
         self.conversation_history: List[Dict] = []
+        self.ml_ready = False
+        
+        # Train ML model dynamically
+        try:
+            from sklearn.feature_extraction.text import TfidfVectorizer
+            from sklearn.linear_model import LogisticRegression
+            
+            self.vectorizer = TfidfVectorizer(ngram_range=(1, 2))
+            self.clf = LogisticRegression(C=2.0, max_iter=200)
+            
+            X_train = []
+            y_train = []
+            for intent_name, phrases in TRAINING_CORPUS.items():
+                for phrase in phrases:
+                    X_train.append(phrase)
+                    y_train.append(intent_name)
+                    
+            self.vectorizer.fit(X_train)
+            self.X_train_vec = self.vectorizer.transform(X_train)
+            self.clf.fit(self.X_train_vec, y_train)
+            self.ml_ready = True
+            logger.info("Chatbot ML Classification Model trained successfully!")
+        except Exception as e:
+            logger.error(f"Failed to initialize Chatbot ML Model: {e}")
         
     def detect_intent(self, message: str) -> Intent:
         """
-        Detect user intent from message.
+        Detect user intent using Scikit-Learn LogisticRegression.
         
         Args:
             message: User message
@@ -103,34 +144,28 @@ class ChatbotEngine:
             Detected Intent with confidence
         """
         message_lower = message.lower().strip()
-        
-        best_intent = "unknown"
-        best_confidence = 0.0
         entities = {}
         
-        # Check each intent pattern
-        for intent_name, patterns in INTENT_PATTERNS.items():
-            for pattern in patterns:
-                match = re.search(pattern, message_lower, re.IGNORECASE)
-                if match:
-                    # Calculate confidence based on match quality
-                    match_ratio = len(match.group()) / len(message_lower)
-                    confidence = min(0.5 + match_ratio * 0.5, 0.95)
-                    
-                    if confidence > best_confidence:
-                        best_confidence = confidence
-                        best_intent = intent_name
-        
-        # Extract disease entities
+        # Extract disease entities first
         for disease, keywords in DISEASE_KEYWORDS.items():
             for keyword in keywords:
                 if keyword in message_lower:
                     entities["disease"] = disease
                     break
+
+        best_intent = "unknown"
+        best_confidence = 0.3
         
-        # Default confidence for unknown intent
-        if best_intent == "unknown":
-            best_confidence = 0.3
+        if self.ml_ready:
+            # Predict using ML model
+            vec = self.vectorizer.transform([message_lower])
+            proba = self.clf.predict_proba(vec)[0]
+            max_idx = proba.argmax()
+            confidence = proba[max_idx]
+            
+            if confidence > 0.22:  # Threshold for triggering a match
+                best_intent = self.clf.classes_[max_idx]
+                best_confidence = confidence
         
         return Intent(name=best_intent, confidence=best_confidence, entities=entities)
     
@@ -277,19 +312,27 @@ Which disease would you like to know more about?
     def _handle_disease_info(self, intent: Intent, disease: Optional[str]) -> Dict:
         if disease and disease in DISEASES:
             info = DISEASES[disease]
-            symptoms = ", ".join(info["symptoms"][:3])
-            risks = ", ".join(info["risk_factors"][:3])
+            symptoms = "\n- ".join(info["symptoms"])
+            risks = "\n- ".join(info["risk_factors"])
             
             message = f"""
-**{info['name']}**
+{info['name']} Detailed Information
 
-📋 **Description**: {info['description']}
+Description: 
+{info['description']} 
+This condition profoundly affects the nervous system and requires careful monitoring. Our AI models are trained to detect distinct anatomical anomalies associated with this disease inside MRI and CT scans.
 
-🔍 **Key Symptoms**: {symptoms}
+Common Symptoms You Might Experience: 
+- {symptoms}
 
-⚠️ **Risk Factors**: {risks}
+Primary Risk Factors Include: 
+- {risks}
 
-Would you like to know about treatments or precautions for {info['name']}?
+Important Context:
+Neurological conditions require careful, professional medical diagnosis. Early detection is universally the most critical factor in successful treatment, surgical intervention, and long-term management. 
+If you or a loved one are experiencing any of these symptoms persistently, please do not wait. You can upload a scan for preliminary AI analysis here on the dashboard, or consult a neuro-specialist immediately.
+
+Would you like to know about specific treatments or precautions for {info['name']}?
             """
             suggestions = [
                 f"Treatment for {info['name']}",
@@ -298,15 +341,15 @@ Would you like to know about treatments or precautions for {info['name']}?
             ]
         else:
             message = """
-I can provide information about these brain diseases:
+I can provide detailed clinical information and diagnostic criteria about these major brain diseases:
 
-1. **Stroke** - A brain attack caused by interrupted blood supply
-2. **Epilepsy** - Neurological disorder with recurrent seizures
-3. **Alzheimer's** - Progressive memory and cognitive decline
-4. **Parkinson's** - Movement disorder causing tremors and stiffness
-5. **Brain Tumor** - Abnormal cell growth in the brain
+1. Stroke - A critical brain attack caused by interrupted blood supply, requiring immediate emergency intervention.
+2. Epilepsy - A neurological disorder characterized by recurrent, unpredictable seizures and electrical storms in the brain.
+3. Alzheimer's - A progressive neurodegenerative disease causing memory loss, dementia, and cognitive decline over years.
+4. Parkinson's - A movement disorder resulting in resting tremors, stiffness, and slow movement due to dopamine loss.
+5. Brain Tumor - Abnormal cellular growth in the brain (like gliomas or meningiomas) which can be benign or deeply malignant.
 
-Which one would you like to learn about?
+Which one of these conditions would you like to learn about in detail?
             """
             suggestions = [
                 "Tell me about stroke",
@@ -652,6 +695,10 @@ Could you rephrase your question? Or choose from the suggestions below.
         
         # Generate response
         response = self.generate_response(intent, message)
+        
+        # Strip all bold markdown asterisks because the frontend doesn't parse them natively
+        if response.get("message"):
+            response["message"] = response["message"].replace("**", "")
         
         # Store in history
         self.conversation_history.append({

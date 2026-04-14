@@ -432,6 +432,25 @@
         }[status] || 'bg-secondary';
     }
 
+    // BUTTON ACTIONS
+    function downloadReport() {
+        // Trigger browser print dialog which allows saving as beautifully styled PDF
+        window.print();
+    }
+
+    function shareWithDoctor() {
+        const diagnosisText = document.querySelector('#analysisResults h3') ? document.querySelector('#analysisResults h3').innerText : 'Inconclusive';
+        const subject = encodeURIComponent("Patient Brain Scan Report");
+        const body = encodeURIComponent(
+            `Doctor,\n\nPlease review my latest AI brain scan analysis.\n\n` +
+            `Scan ID: #${scanId}\n` +
+            `Primary Finding: ${diagnosisText}\n\n` +
+            `Secure link to full report: ${window.location.href}\n\n` +
+            `Thank you.`
+        );
+        window.location.href = `mailto:?subject=${subject}&body=${body}`;
+    }
+
     // INIT
     loadScanDetails();
 
