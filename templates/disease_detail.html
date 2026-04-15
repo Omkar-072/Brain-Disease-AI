@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block title %}{{ disease.name }} - Brain Disease AI{% endblock %}
+
+{% block content %}
+<div class="container my-5 fade-up">
+    <div class="row">
+        <div class="col-lg-10 mx-auto">
+            <!-- Header -->
+            <div class="text-center mb-5">
+                <span class="badge bg-primary px-3 py-2 rounded-pill mb-3">Disease Information</span>
+                <h1 class="display-4 fw-bold">{{ disease.name }}</h1>
+                <p class="lead text-muted">{{ disease.description }}</p>
+            </div>
+
+            <div class="row g-4">
+                <!-- Main Info -->
+                <div class="col-md-8">
+                    <!-- Symptoms -->
+                    <div class="card shadow-sm border-0 mb-4">
+                        <div class="card-body p-4">
+                            <h4 class="card-title mb-4"><i class="fas fa-notes-medical text-danger me-2"></i>Common Symptoms</h4>
+                            <div class="row">
+                                {% for symptom in disease.symptoms %}
+                                <div class="col-md-6 mb-2">
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-check-circle text-success me-2"></i>
+                                        <span>{{ symptom }}</span>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Risk Factors -->
+                    <div class="card shadow-sm border-0 mb-4">
+                        <div class="card-body p-4">
+                            <h4 class="card-title mb-4"><i class="fas fa-exclamation-triangle text-warning me-2"></i>Risk Factors</h4>
+                            <div class="row">
+                                {% for factor in disease.risk_factors %}
+                                <div class="col-md-6 mb-2">
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-info-circle text-info me-2"></i>
+                                        <span>{{ factor }}</span>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Treatments -->
+                    <div class="card shadow-sm border-0">
+                        <div class="card-body p-4">
+                            <h4 class="card-title mb-4"><i class="fas fa-band-aid text-primary me-2"></i>Recommended Treatments</h4>
+                            
+                            <div class="mb-4">
+                                <h6 class="fw-bold"><i class="fas fa-pills me-2"></i>Medications</h6>
+                                <p class="text-muted">{{ disease.treatments.medications|join(", ") if disease.treatments.medications else "Consult a specialist for personalized medication." }}</p>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <h6 class="fw-bold"><i class="fas fa-hospital-user me-2"></i>Procedures</h6>
+                                <p class="text-muted">{{ disease.treatments.procedures|join(", ") if disease.treatments.procedures else "Standard diagnostic and surgical procedures as recommended." }}</p>
+                            </div>
+
+                            <div class="mb-0">
+                                <h6 class="fw-bold"><i class="fas fa-heartbeat me-2"></i>Lifestyle Changes</h6>
+                                <p class="text-muted">{{ disease.treatments.lifestyle|join(", ") if disease.treatments.lifestyle else "Maintain a balanced diet and regular exercise." }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sidebar -->
+                <div class="col-md-4">
+                    <!-- Specialists -->
+                    <div class="card shadow-sm border-0 mb-4 bg-light">
+                        <div class="card-body p-4">
+                            <h5 class="fw-bold mb-3">Consult a Specialist</h5>
+                            <p class="small text-muted mb-4">If you or someone you know is experiencing symptoms, please consult these specialists:</p>
+                            <ul class="list-unstyled mb-0">
+                                {% for specialist in disease.treatments.specialists %}
+                                <li class="mb-2"><i class="fas fa-user-md text-primary me-2"></i>{{ specialist }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- AI Chat CTA -->
+                    <div class="card shadow-sm border-0 mb-4 bg-primary text-white">
+                        <div class="card-body p-4 text-center">
+                            <i class="fas fa-robot fa-3x mb-3"></i>
+                            <h5>Have More Questions?</h5>
+                            <p class="small mb-4">Our AI Chatbot is available 24/7 to answer your specific medical queries about {{ disease.name }}.</p>
+                            <a href="/chat" class="btn btn-light w-100 fw-bold">Ask AI Now</a>
+                        </div>
+                    </div>
+
+                    <!-- Disclaimer -->
+                    <div class="alert alert-warning small border-0 shadow-sm" role="alert">
+                        <i class="fas fa-exclamation-circle me-2"></i>
+                        <strong>Disclaimer:</strong> This information is for educational purposes only. Always consult a healthcare professional for diagnosis.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

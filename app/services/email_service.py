@@ -33,7 +33,15 @@ async def send_email(
         bool: True if email sent successfully, False otherwise
     """
     if not settings.SMTP_USER or not settings.SMTP_PASSWORD:
-        logger.warning("Email not configured. Skipping email send.")
+        logger.warning(f"Email not configured. [SIMULATION MODE] To: {to_email}, Subject: {subject}")
+        # Log the content for debugging purposes if it's a small message or special case
+        if "OTP" in subject or "Password" in subject:
+            import re
+            otp_match = re.search(r'<strong>(\d{6})</strong>', html_content)
+            if otp_match:
+                print("\n" + "="*50)
+                print(f"DEBUG: Password Reset OTP for {to_email}: {otp_match.group(1)}")
+                print("="*50 + "\n")
         return False
     
     try:
@@ -64,6 +72,14 @@ async def send_email(
         
     except Exception as e:
         logger.error(f"Failed to send email to {to_email}: {str(e)}")
+        # Fallback: Print OTP to console if email sending fails for any reason
+        if "OTP" in subject or "Password" in subject:
+             import re
+             otp_match = re.search(r'<strong>(\d{6})</strong>', html_content)
+             if otp_match:
+                 print("\n" + "!"*50)
+                 print(f"ERROR: Email failed but here is your OTP for {to_email}: {otp_match.group(1)}")
+                 print("!"*50 + "\n")
         return False
 
 

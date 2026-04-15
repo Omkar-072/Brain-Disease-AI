@@ -21,7 +21,7 @@ from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 
 # Import configuration
-from app.config import settings
+from app.config import settings, DISEASES, TREATMENTS
 
 # Import database
 from app.database import engine, Base, get_db
@@ -167,9 +167,8 @@ async def home(request: Request):
     """Home page"""
     try:
         return templates.TemplateResponse(
-            request,
             name="index.html",
-            context={}
+            context={"request": request}
         )
     except Exception as e:
         logger.error(f"Error rendering home page: {e}", exc_info=True)
@@ -263,6 +262,54 @@ async def scan_detail_page(request: Request, scan_id: str):
         return templates.TemplateResponse(request, name="scan_detail.html", context={"scan_id": scan_id})
     except Exception as e:
         logger.error(f"Error rendering scan detail page: {e}", exc_info=True)
+        return RedirectResponse(url="/", status_code=302)
+
+
+@app.get("/contact", response_class=HTMLResponse)
+async def contact_page(request: Request):
+    """Contact page"""
+    try:
+        return templates.TemplateResponse(
+            name="contact.html", 
+            context={"request": request}
+        )
+    except Exception as e:
+        logger.error(f"Error rendering contact page: {e}", exc_info=True)
+        return RedirectResponse(url="/", status_code=302)
+
+
+@app.get("/forgot-password", response_class=HTMLResponse)
+async def forgot_password_page(request: Request):
+    """Forgot password page"""
+    try:
+        return templates.TemplateResponse(
+            name="forgot_password.html", 
+            context={"request": request}
+        )
+    except Exception as e:
+        logger.error(f"Error rendering forgot password page: {e}", exc_info=True)
+        return RedirectResponse(url="/", status_code=302)
+
+
+@app.get("/diseases/{disease_type}", response_class=HTMLResponse)
+async def disease_detail_page(request: Request, disease_type: str):
+    """Disease detail page"""
+    disease_key = disease_type.lower().replace("-", "_")
+    
+    if disease_key not in DISEASES:
+        return RedirectResponse(url="/", status_code=302)
+        
+    disease_info = DISEASES[disease_key].copy()
+    treatment_info = TREATMENTS.get(disease_key, {})
+    disease_info["treatments"] = treatment_info
+    
+    try:
+        return templates.TemplateResponse(
+            name="disease_detail.html", 
+            context={"request": request, "disease": disease_info}
+        )
+    except Exception as e:
+        logger.error(f"Error rendering disease detail page: {e}", exc_info=True)
         return RedirectResponse(url="/", status_code=302)
 
 

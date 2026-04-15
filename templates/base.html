@@ -29,11 +29,30 @@
                     <li class="nav-item">
                         <a class="nav-link" href="/"><i class="fas fa-home me-1"></i>Home</a>
                     </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="diseasesDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-brain me-1"></i>Diseases
+                        </a>
+                        <ul class="dropdown-menu shadow border-0" aria-labelledby="diseasesDropdown">
+                            <li><a class="dropdown-item" href="/diseases/stroke">Stroke</a></li>
+                            <li><a class="dropdown-item" href="/diseases/epilepsy">Epilepsy</a></li>
+                            <li><a class="dropdown-item" href="/diseases/alzheimer">Alzheimer's Disease</a></li>
+                            <li><a class="dropdown-item" href="/diseases/parkinson">Parkinson's Disease</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="/diseases/brain_tumor">Brain Tumor (General)</a></li>
+                            <li><a class="dropdown-item" href="/diseases/glioma">Glioma</a></li>
+                            <li><a class="dropdown-item" href="/diseases/meningioma">Meningioma</a></li>
+                            <li><a class="dropdown-item" href="/diseases/pituitary">Pituitary Tumor</a></li>
+                        </ul>
+                    </li>
                     <li class="nav-item">
                         <a class="nav-link" href="/upload"><i class="fas fa-upload me-1"></i>Upload Scan</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="/chat"><i class="fas fa-robot me-1"></i>Chatbot</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/contact"><i class="fas fa-envelope me-1"></i>Contact</a>
                     </li>
                 </ul>
                 <ul class="navbar-nav flex-row gap-2" id="auth-links">
@@ -68,6 +87,7 @@
                         <li><a href="/upload" class="text-muted">Upload Scan</a></li>
                         <li><a href="/chat" class="text-muted">AI Chatbot</a></li>
                         <li><a href="/faq" class="text-muted">FAQ</a></li>
+                        <li><a href="/contact" class="text-muted">Contact Us</a></li>
                     </ul>
                 </div>
                 <div class="col-md-4">
