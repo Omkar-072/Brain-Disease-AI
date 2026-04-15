@@ -1,7 +1,10 @@
 """
 Brain Disease AI - Chatbot API Routes
 """
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
+import logging
+
+logger = logging.getLogger(__name__)
 from sqlalchemy.orm import Session
 from typing import Optional
 import uuid
@@ -11,8 +14,9 @@ from app.database import get_db, User, ChatSession, ChatMessage
 from app.schemas import (
     ChatMessageCreate, ChatMessageResponse, ChatSessionResponse, ChatBotResponse
 )
-from app.auth.security import get_current_active_user
+from app.auth.security import get_current_user_flexible, get_current_active_user  # Import both
 from app.chatbot.engine import ChatbotEngine
+from typing import Union
 
 router = APIRouter(tags=["Chatbot"])
 
@@ -23,61 +27,86 @@ chatbot = ChatbotEngine()
 @router.post("/message", response_model=ChatBotResponse)
 async def send_message(
     message: ChatMessageCreate,
-    session_id: Optional[int] = None,
-    current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db)
+    session_id_query: Optional[str] = None,
+    db: Session = Depends(get_db),
+    request: Request = None  # to manually check for user if needed
 ):
     """
     Send a message to the chatbot and get a response.
     
-    - **message**: User message text
-    - **session_id**: Optional existing session ID to continue conversation
+    - **message**: User message text (can include session_id in body)
+    - **session_id_query**: Optional session ID from query param
     """
-    # Get or create chat session
-    if session_id:
-        session = db.query(ChatSession).filter(
-            ChatSession.id == session_id,
-            ChatSession.user_id == current_user.id,
-            ChatSession.is_active == True
-        ).first()
+    # 1. Resolve session_id (from body OR query)
+    # The frontend usually sends it in the JSON body
+    session_id_str = message.session_id or session_id_query
+    
+    # 2. Try to get user if they are logged in (optional)
+    current_user = None
+    try:
+        from app.auth.security import get_current_user
+        # Manually invoke dependency-like logic or use Request
+        # For simplicity in this fix, we'll try to find the user if a token exists
+        auth_header = request.headers.get("Authorization")
+        token = None
+        if auth_header and auth_header.startswith("Bearer "):
+            token = auth_header.split(" ")[1]
+        else:
+            token = request.cookies.get("access_token")
+            
+        if token:
+            from app.auth.security import verify_token
+            token_data = verify_token(token, "access")
+            if token_data:
+                current_user = db.query(User).filter(User.id == token_data.user_id).first()
+    except Exception as e:
+        logger.debug(f"Guest user using chatbot: {e}")
+
+    session = None
+    
+    # 3. Only save to DB if user is logged in
+    if current_user and current_user.is_active:
+        # Get or create chat session
+        if session_id_str and session_id_str.isdigit():
+             session_id_int = int(session_id_str)
+             session = db.query(ChatSession).filter(
+                ChatSession.id == session_id_int,
+                ChatSession.user_id == current_user.id
+            ).first()
         
         if not session:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Chat session not found"
+            # Create new session if none found or if session_id was a random string
+            session = ChatSession(
+                user_id=current_user.id,
+                session_token=session_id_str or str(uuid.uuid4()),
+                is_active=True
             )
-    else:
-        # Create new session
-        session = ChatSession(
-            user_id=current_user.id,
-            session_token=str(uuid.uuid4()),
-            is_active=True
+            db.add(session)
+            db.commit()
+            db.refresh(session)
+            
+        # Save user message
+        user_msg = ChatMessage(
+            session_id=session.id,
+            sender="user",
+            content=message.message
         )
-        db.add(session)
-        db.commit()
-        db.refresh(session)
+        db.add(user_msg)
     
-    # Save user message
-    user_msg = ChatMessage(
-        session_id=session.id,
-        sender="user",
-        content=message.message
-    )
-    db.add(user_msg)
-    
-    # Get chatbot response
+    # 4. Get chatbot response
     response = chatbot.chat(message.message)
     
-    # Save bot response
-    bot_msg = ChatMessage(
-        session_id=session.id,
-        sender="bot",
-        content=response["message"],
-        detected_intent=response.get("intent"),
-        confidence=response.get("confidence")
-    )
-    db.add(bot_msg)
-    db.commit()
+    # 5. Save bot response if session exists
+    if session:
+        bot_msg = ChatMessage(
+            session_id=session.id,
+            sender="bot",
+            content=response["message"],
+            detected_intent=response.get("intent"),
+            confidence=response.get("confidence")
+        )
+        db.add(bot_msg)
+        db.commit()
     
     return ChatBotResponse(
         response=response["message"],

@@ -2,7 +2,7 @@
 Brain Disease AI - Info Routes
 Disease information, treatments, hospitals, and system info APIs
 """
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
 from sqlalchemy.orm import Session
 from typing import List, Optional
 
@@ -179,6 +179,7 @@ async def get_hospitals_by_specialty(specialty: str):
 @router.post("/contact", response_model=ContactResponse, status_code=status.HTTP_201_CREATED)
 async def submit_contact_form(
     contact: ContactCreate,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db)
 ):
     """Submit a contact inquiry"""
@@ -193,6 +194,17 @@ async def submit_contact_form(
     db.add(inquiry)
     db.commit()
     db.refresh(inquiry)
+    
+    # Send email notification to admin in background
+    from app.services.email_service import send_contact_notification
+    background_tasks.add_task(
+        send_contact_notification,
+        name=contact.name,
+        email=contact.email,
+        subject=contact.subject,
+        message=contact.message,
+        phone=contact.phone
+    )
     
     return inquiry
 

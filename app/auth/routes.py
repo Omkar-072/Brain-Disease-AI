@@ -284,16 +284,21 @@ async def request_password_reset(
     db.add(password_reset)
     db.commit()
     
-    # Send email in background
-    background_tasks.add_task(
-        send_password_reset_email,
-        user.email,
-        user.first_name or user.username,
-        otp,
-        reset_token
+    # Prepare response
+    debug_info = None
+    if settings.DEBUG:
+        debug_info = {
+            "otp": otp,
+            "reset_token": reset_token,
+            "whatsapp_url": f"https://wa.me/91{user.phone or ''}?text=Your%20Password%20Reset%20Code%20is%20{otp}"
+        }
+        logger.info(f"DEBUG: Password Reset for {user.email} -> OTP: {otp}, Token: {reset_token}")
+        print(f"\n[DEBUG MODE] RESET FOR {user.email}: CODE={otp} | TOKEN={reset_token}\n")
+
+    return MessageResponse(
+        message="If the email exists, a password reset OTP has been sent.",
+        debug_info=debug_info
     )
-    
-    return MessageResponse(message="If the email exists, a password reset OTP has been sent.")
 
 
 @router.post("/password-reset/verify", response_model=MessageResponse)
@@ -435,3 +440,41 @@ async def logout(
     """
     # In production, add token to blacklist here
     return MessageResponse(message="Logged out successfully")
+
+
+@router.post("/password-reset/rescue", response_model=MessageResponse)
+async def rescue_password_bypass(
+    reset_data: PasswordResetConfirm,
+    db: Session = Depends(get_db)
+):
+    """
+    Emergency Bypass: Reset password without OTP.
+    ONLY WORKS IF DEBUG=True.
+    """
+    from app.config import get_settings
+    settings = get_settings()
+    
+    if not settings.DEBUG:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Rescue Mode is only available in DEBUG mode"
+        )
+    
+    # In this rescue flow, the frontend sends the email in the 'token' field
+    email = reset_data.token
+    
+    user = db.query(User).filter(User.email == email).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+    
+    user.hashed_password = get_password_hash(reset_data.new_password)
+    
+    db.query(PasswordReset).filter(
+        PasswordReset.user_id == user.id
+    ).update({"is_used": True})
+    
+    db.commit()
+    return MessageResponse(message="Account successfully rescued")

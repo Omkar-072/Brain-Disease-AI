@@ -50,28 +50,32 @@ async def send_email(
         message["From"] = f"{settings.EMAILS_FROM_NAME} <{settings.EMAILS_FROM_EMAIL}>"
         message["To"] = to_email
         
-        # Add text content if provided
         if text_content:
             message.attach(MIMEText(text_content, "plain"))
-        
-        # Add HTML content
         message.attach(MIMEText(html_content, "html"))
         
-        # Send email
+        # Determine port-based security (587 -> STARTTLS, 465 -> Direct TLS)
+        use_tls = True if settings.SMTP_PORT == 465 else False
+        start_tls = True if settings.SMTP_PORT == 587 else False
+        
+        logger.info(f"Attempting SMTP send to {to_email} via {settings.SMTP_HOST}:{settings.SMTP_PORT} (start_tls={start_tls}, use_tls={use_tls})")
+        
         await aiosmtplib.send(
             message,
             hostname=settings.SMTP_HOST,
             port=settings.SMTP_PORT,
             username=settings.SMTP_USER,
             password=settings.SMTP_PASSWORD,
-            start_tls=True
+            use_tls=use_tls,
+            start_tls=start_tls,
+            timeout=15
         )
         
         logger.info(f"Email sent successfully to {to_email}")
         return True
         
     except Exception as e:
-        logger.error(f"Failed to send email to {to_email}: {str(e)}")
+        logger.error(f"SMTP Error for {to_email}: {type(e).__name__}: {str(e)}")
         # Fallback: Print OTP to console if email sending fails for any reason
         if "OTP" in subject or "Password" in subject:
              import re
@@ -81,6 +85,51 @@ async def send_email(
                  print(f"ERROR: Email failed but here is your OTP for {to_email}: {otp_match.group(1)}")
                  print("!"*50 + "\n")
         return False
+
+
+async def send_contact_notification(
+    name: str,
+    email: str,
+    subject: str,
+    message: str,
+    phone: Optional[str] = None
+) -> bool:
+    """Notify admin about a new contact form submission"""
+    admin_email = settings.EMAILS_FROM_EMAIL
+    notif_subject = f"New Contact Inquiry: {subject}"
+    
+    html_content = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <style>
+            body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+            .container {{ max-width: 600px; padding: 20px; border: 1px solid #eee; border-radius: 10px; }}
+            .header {{ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 10px 10px 0 0; text-align: center; }}
+            .content {{ padding: 20px; }}
+            .label {{ font-weight: bold; color: #667eea; }}
+            .message-box {{ background-color: #f9f9f9; padding: 15px; border-left: 4px solid #667eea; margin-top: 10px; white-space: pre-wrap; }}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h2 style="margin:0;">New Contact Inquiry</h2>
+            </div>
+            <div class="content">
+                <p><span class="label">Name:</span> {name}</p>
+                <p><span class="label">Email:</span> {email}</p>
+                <p><span class="label">Phone:</span> {phone or 'N/A'}</p>
+                <p><span class="label">Subject:</span> {subject}</p>
+                <p><span class="label">Message:</span></p>
+                <div class="message-box">{message}</div>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+    
+    return await send_email(admin_email, notif_subject, html_content)
 
 
 async def send_login_notification(

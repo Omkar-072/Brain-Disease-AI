@@ -340,11 +340,19 @@ async function sendMessage(message) {
         if (response.ok) {
             addMessage(data.response || data.message);
         } else {
-            addMessage('Sorry, I encountered an error. Please try again.');
+            console.error('Chat Error:', data);
+            let errorMsg = 'Sorry, I encountered an error.';
+            if (response.status === 401) {
+                errorMsg = 'Your session has expired. Please log in again to save chat history.';
+            } else if (response.status === 422) {
+                errorMsg = 'There was a problem with the message format. Please try again.';
+            }
+            addMessage(errorMsg);
         }
     } catch (error) {
+        console.error('Fetch Error:', error);
         hideTypingIndicator();
-        addMessage('Sorry, I\'m having trouble connecting. Please check your internet connection.');
+        addMessage('Sorry, I\'m having trouble connecting to the server. Please check your internet connection.');
     } finally {
         sendBtn.disabled = false;
         messageInput.focus();

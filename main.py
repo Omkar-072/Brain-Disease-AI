@@ -199,17 +199,29 @@ async def home(request: Request):
 async def login_page(request: Request):
     """Login page"""
     try:
-        return templates.TemplateResponse(request, name="login.html", context={})
+        return templates.TemplateResponse(
+            name="login.html", 
+            context={"request": request}
+        )
     except Exception as e:
         logger.error(f"Error rendering login page: {e}", exc_info=True)
         return RedirectResponse(url="/", status_code=302)
+
+
+@app.get("/rescue-password", response_class=HTMLResponse)
+async def rescue_password_page(request: Request):
+    """Emergency Rescue page"""
+    return templates.TemplateResponse("rescue_password.html", {"request": request})
 
 
 @app.get("/register", response_class=HTMLResponse)
 async def register_page(request: Request):
     """Registration page"""
     try:
-        return templates.TemplateResponse(request, name="register.html", context={})
+        return templates.TemplateResponse(
+            name="register.html", 
+            context={"request": request}
+        )
     except Exception as e:
         logger.error(f"Error rendering register page: {e}", exc_info=True)
         return RedirectResponse(url="/", status_code=302)
@@ -219,7 +231,10 @@ async def register_page(request: Request):
 async def dashboard_page(request: Request):
     """User dashboard page"""
     try:
-        return templates.TemplateResponse(request, name="dashboard.html", context={})
+        return templates.TemplateResponse(
+            name="dashboard.html", 
+            context={"request": request}
+        )
     except Exception as e:
         logger.error(f"Error rendering dashboard page: {e}", exc_info=True)
         return RedirectResponse(url="/", status_code=302)
@@ -229,7 +244,10 @@ async def dashboard_page(request: Request):
 async def upload_page(request: Request):
     """Scan upload page"""
     try:
-        return templates.TemplateResponse(request, name="upload.html", context={})
+        return templates.TemplateResponse(
+            name="upload.html", 
+            context={"request": request}
+        )
     except Exception as e:
         logger.error(f"Error rendering upload page: {e}", exc_info=True)
         return RedirectResponse(url="/", status_code=302)
@@ -239,7 +257,10 @@ async def upload_page(request: Request):
 async def chat_page(request: Request):
     """Chatbot page"""
     try:
-        return templates.TemplateResponse(request, name="chat.html", context={})
+        return templates.TemplateResponse(
+            name="chat.html", 
+            context={"request": request}
+        )
     except Exception as e:
         logger.error(f"Error rendering chat page: {e}", exc_info=True)
         return RedirectResponse(url="/", status_code=302)
@@ -249,7 +270,10 @@ async def chat_page(request: Request):
 async def faq_page(request: Request):
     """FAQ page"""
     try:
-        return templates.TemplateResponse(request, name="faq.html", context={})
+        return templates.TemplateResponse(
+            name="faq.html", 
+            context={"request": request}
+        )
     except Exception as e:
         logger.error(f"Error rendering faq page: {e}", exc_info=True)
         return RedirectResponse(url="/", status_code=302)
@@ -259,7 +283,10 @@ async def faq_page(request: Request):
 async def scan_detail_page(request: Request, scan_id: str):
     """Scan detail/results page"""
     try:
-        return templates.TemplateResponse(request, name="scan_detail.html", context={"scan_id": scan_id})
+        return templates.TemplateResponse(
+            name="scan_detail.html", 
+            context={"request": request, "scan_id": scan_id}
+        )
     except Exception as e:
         logger.error(f"Error rendering scan detail page: {e}", exc_info=True)
         return RedirectResponse(url="/", status_code=302)

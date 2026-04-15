@@ -264,6 +264,7 @@ class PredictionHistory(BaseModel):
 class ChatMessageCreate(BaseModel):
     """Schema for creating chat message"""
     message: str = Field(..., min_length=1, max_length=1000)
+    session_id: Optional[str] = None
 
 
 class ChatMessageResponse(BaseModel):
@@ -391,6 +392,7 @@ class MessageResponse(BaseModel):
     """Generic message response"""
     message: str
     success: bool = True
+    debug_info: Optional[Dict[str, Any]] = None
 
 
 class ErrorResponse(BaseModel):
