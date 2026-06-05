@@ -33,6 +33,7 @@ LABEL_MAP = {
 # ─────────────────────────────────────────
 _models = {
     "mri_tumor": None,
+    "mri_alzheimer": None,
     "ct_stroke": None,
     "pet_alzheimer": None
 }
@@ -46,6 +47,7 @@ def load_models():
 
         paths = {
             "mri_tumor": "app/ai_models/weights/brain_disease_model.h5",
+            "mri_alzheimer": "app/ai_models/weights/mri_alzheimer_model.h5",
             "ct_stroke": "app/ai_models/weights/ct_stroke_model.h5",
             "pet_alzheimer": "app/ai_models/weights/pet_alzheimer_model.h5",
         }
@@ -99,11 +101,13 @@ def run_model(model, image, classes):
     print("========================================")
     print(f"RAW AI OUTPUT: {preds}")
 
-    # Fallback for old 1-node binary models
+    # Binary logic for 1-node sigmoid models (Stroke)
     if preds.size == 1:
         prob = float(preds[0])
-        idx = 0 if prob > 0.5 else 1
-        conf = prob if idx == 0 else (1.0 - prob)
+        # Standard sigmoid logic: prob > 0.5 is the positive/second class in most binary setups
+        # STROKE_CLASSES = ["No Stroke", "Stroke"]
+        idx = 1 if prob > 0.5 else 0
+        conf = prob if idx == 1 else (1.0 - prob)
     # Modern Categorical / 2-node Binary models
     else:
         if np.max(preds) > 1:
@@ -122,11 +126,15 @@ def run_model(model, image, classes):
 # ─────────────────────────────────────────
 # 4. PERFECTLY ISOLATED PIPELINES
 # ─────────────────────────────────────────
-def predict_mri(image):
-    # MRI is ONLY for Tumors
+def predict_mri_tumor(image):
     result = run_model(_models["mri_tumor"], image, TUMOR_CLASSES)
     if result["label"] == "MODEL_OFFLINE": return "INCONCLUSIVE", 0.0, "system_error"
     return result["label"], result["confidence"], "tumor"
+
+def predict_mri_alzheimer(image):
+    result = run_model(_models["mri_alzheimer"], image, ALZ_CLASSES)
+    if result["label"] == "MODEL_OFFLINE": return "INCONCLUSIVE", 0.0, "system_error"
+    return result["label"], result["confidence"], "alzheimers"
 
 def predict_ct(image):
     # CT is ONLY for Strokes
@@ -165,11 +173,36 @@ def _process_scan(image_path, scan_type="MRI"):
         image = preprocess_image(image_path)
 
         if scan_type == "MRI":
-            label, conf, dtype = predict_mri(image)
+            # MRI runs BOTH models and we pick the one with higher clinical significance
+            t_label, t_conf, t_type = predict_mri_tumor(image)
+            a_label, a_conf, a_type = predict_mri_alzheimer(image)
+            
+            # If both say "Nothing found", use the one with higher confidence
+            if t_label == "NO_TUMOR" and a_label == "NON_DEMENTED":
+                label, conf, dtype = "NORMAL", max(t_conf, a_conf), "normal"
+            # If tumor is found, it's usually high priority
+            elif t_label != "NO_TUMOR":
+                label, conf, dtype = t_label, t_conf, t_type
+            # Otherwise if alzheimer is found
+            elif a_label != "NON_DEMENTED":
+                label, conf, dtype = a_label, a_conf, a_type
+            else:
+                label, conf, dtype = t_label, t_conf, t_type
+                
+            # Extra data for UI breakdown
+            extra_preds = {
+                "tumor_model": {"label": t_label, "confidence": t_conf},
+                "alz_model": {"label": a_label, "confidence": a_conf}
+            }
         elif scan_type == "CT":
             label, conf, dtype = predict_ct(image)
+            # If No Stroke, it's a normal scan
+            if label == "NO_STROKE": dtype = "normal"
+            extra_preds = {"stroke_model": {"label": label, "confidence": conf}}
         elif scan_type == "PET":
             label, conf, dtype = predict_pet(image)
+            if label == "NON_DEMENTED": dtype = "normal"
+            extra_preds = {"alz_model": {"label": label, "confidence": conf}}
         else:
             return {"predicted_disease": "INCONCLUSIVE", "confidence": 0.0, "scan_type": scan_type}
 
@@ -182,6 +215,7 @@ def _process_scan(image_path, scan_type="MRI"):
             "confidence_level": get_prediction_confidence_level(calibrated_conf),
             "scan_type": scan_type,
             "disease_type": dtype,
+            "all_model_results": extra_preds
         }
 
     except Exception as e:

@@ -167,8 +167,8 @@ async def home(request: Request):
     """Home page"""
     try:
         return templates.TemplateResponse(
-            name="index.html",
-            context={"request": request}
+            "index.html",
+            {"request": request}
         )
     except Exception as e:
         logger.error(f"Error rendering home page: {e}", exc_info=True)
@@ -200,8 +200,8 @@ async def login_page(request: Request):
     """Login page"""
     try:
         return templates.TemplateResponse(
-            name="login.html", 
-            context={"request": request}
+            "login.html", 
+            {"request": request}
         )
     except Exception as e:
         logger.error(f"Error rendering login page: {e}", exc_info=True)
@@ -219,8 +219,8 @@ async def register_page(request: Request):
     """Registration page"""
     try:
         return templates.TemplateResponse(
-            name="register.html", 
-            context={"request": request}
+            "register.html", 
+            {"request": request}
         )
     except Exception as e:
         logger.error(f"Error rendering register page: {e}", exc_info=True)
@@ -232,8 +232,8 @@ async def dashboard_page(request: Request):
     """User dashboard page"""
     try:
         return templates.TemplateResponse(
-            name="dashboard.html", 
-            context={"request": request}
+            "dashboard.html", 
+            {"request": request}
         )
     except Exception as e:
         logger.error(f"Error rendering dashboard page: {e}", exc_info=True)
@@ -245,8 +245,8 @@ async def upload_page(request: Request):
     """Scan upload page"""
     try:
         return templates.TemplateResponse(
-            name="upload.html", 
-            context={"request": request}
+            "upload.html", 
+            {"request": request}
         )
     except Exception as e:
         logger.error(f"Error rendering upload page: {e}", exc_info=True)
@@ -258,8 +258,8 @@ async def chat_page(request: Request):
     """Chatbot page"""
     try:
         return templates.TemplateResponse(
-            name="chat.html", 
-            context={"request": request}
+            "chat.html", 
+            {"request": request}
         )
     except Exception as e:
         logger.error(f"Error rendering chat page: {e}", exc_info=True)
@@ -271,8 +271,8 @@ async def faq_page(request: Request):
     """FAQ page"""
     try:
         return templates.TemplateResponse(
-            name="faq.html", 
-            context={"request": request}
+            "faq.html", 
+            {"request": request}
         )
     except Exception as e:
         logger.error(f"Error rendering faq page: {e}", exc_info=True)
@@ -284,8 +284,8 @@ async def scan_detail_page(request: Request, scan_id: str):
     """Scan detail/results page"""
     try:
         return templates.TemplateResponse(
-            name="scan_detail.html", 
-            context={"request": request, "scan_id": scan_id}
+            "scan_detail.html", 
+            {"request": request, "scan_id": scan_id}
         )
     except Exception as e:
         logger.error(f"Error rendering scan detail page: {e}", exc_info=True)
@@ -297,8 +297,8 @@ async def contact_page(request: Request):
     """Contact page"""
     try:
         return templates.TemplateResponse(
-            name="contact.html", 
-            context={"request": request}
+            "contact.html", 
+            {"request": request}
         )
     except Exception as e:
         logger.error(f"Error rendering contact page: {e}", exc_info=True)
@@ -310,8 +310,8 @@ async def forgot_password_page(request: Request):
     """Forgot password page"""
     try:
         return templates.TemplateResponse(
-            name="forgot_password.html", 
-            context={"request": request}
+            "forgot_password.html", 
+            {"request": request}
         )
     except Exception as e:
         logger.error(f"Error rendering forgot password page: {e}", exc_info=True)
@@ -332,8 +332,8 @@ async def disease_detail_page(request: Request, disease_type: str):
     
     try:
         return templates.TemplateResponse(
-            name="disease_detail.html", 
-            context={"request": request, "disease": disease_info}
+            "disease_detail.html", 
+            {"request": request, "disease": disease_info}
         )
     except Exception as e:
         logger.error(f"Error rendering disease detail page: {e}", exc_info=True)
@@ -397,9 +397,8 @@ async def not_found_handler(request: Request, exc: HTTPException):
         return JSONResponse({"detail": "Endpoint not found", "status_code": 404}, status_code=404)
     try:
         return templates.TemplateResponse(
-            request,
-            name="index.html",
-            context={"error": "Page not found"},
+            "index.html",
+            {"request": request, "error": "Page not found"},
             status_code=404
         )
     except Exception as e:
@@ -415,9 +414,8 @@ async def server_error_handler(request: Request, exc: Exception):
         return JSONResponse({"detail": "Internal server error", "status_code": 500}, status_code=500)
     try:
         return templates.TemplateResponse(
-            request,
-            name="index.html",
-            context={"error": "Something went wrong"},
+            "index.html",
+            {"request": request, "error": "Something went wrong"},
             status_code=500
         )
     except Exception as e:

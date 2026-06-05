@@ -141,33 +141,31 @@ async def process_scan_async(scan_id: int):
 
         mapped_key = map_prediction(raw_prediction)
         
-        # In UI, we usually want "NO_STROKE" to just show as "NORMAL" for consistency
-        ui_prediction = "NORMAL" if mapped_key == "NO_STROKE" else mapped_key
+        # In UI, we usually want "NO_STROKE" and "NORMAL" to just show as "NORMAL" for consistency
+        ui_prediction = "NORMAL" if mapped_key in ["NO_STROKE", "NORMAL"] else mapped_key
         scan.predicted_disease = resolve_disease_enum(ui_prediction)
 
-        # Smartly route the confidence to the correct UI display columns
-        tumor_label, tumor_conf = "NO_TUMOR", 0.0
-        alz_label, alz_conf = "NON_DEMENTED", 0.0
-
-        if disease_type == "tumor":
-            tumor_label, tumor_conf = raw_prediction, confidence
-        elif disease_type == "alzheimers":
-            alz_label, alz_conf = raw_prediction, confidence
-        elif disease_type == "stroke":
-            pass # Currently handled directly by the main predicted_disease column
+        # Retrieve per-model breakdown from the predictor results
+        model_results = result.get("all_model_results", {})
+        t_res = model_results.get("tumor_model", {})
+        a_res = model_results.get("alz_model", {})
+        s_res = model_results.get("stroke_model", {})
 
         scan.confidence_score = confidence
         scan.all_predictions  = {
             "final_disease": raw_prediction,
             "final_conf": confidence,
             "disease_type": disease_type,
-            "confidence_level": result.get("confidence_level", "ERROR")
+            "confidence_level": result.get("confidence_level", "ERROR"),
+            "tumor_model": t_res,
+            "alz_model": a_res,
+            "stroke_model": s_res
         }
         
-        scan.tumor_result     = tumor_label
-        scan.tumor_confidence = tumor_conf
-        scan.alz_result       = alz_label
-        scan.alz_confidence   = alz_conf
+        scan.tumor_result     = t_res.get("label", "NO_TUMOR")
+        scan.tumor_confidence = t_res.get("confidence", 0.0)
+        scan.alz_result       = a_res.get("label", "NON_DEMENTED")
+        scan.alz_confidence   = a_res.get("confidence", 0.0)
         scan.status           = ScanStatus.COMPLETED
         scan.processed_at     = datetime.utcnow()
 
